@@ -1,5 +1,7 @@
 package com.kafkamgt.clusterapi.controller;
 
+import com.kafkamgt.clusterapi.models.AclsNativeType;
+import com.kafkamgt.clusterapi.services.AivenApiService;
 import com.kafkamgt.clusterapi.services.ManageKafkaComponents;
 import com.kafkamgt.clusterapi.services.MonitoringService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,9 @@ public class ClusterApiController {
 
     @Autowired
     MonitoringService monitoringService;
+
+    @Autowired
+    AivenApiService aivenApiService;
 
     @RequestMapping(value = "/getApiStatus", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<String> getApiStatus(){
@@ -138,29 +143,39 @@ public class ClusterApiController {
         String result;
         try {
             String aclType = aclRequest.get("aclType").get(0);
+            String aclNativeType = aclRequest.get("aclsNativeType").get(0);
 
-            if (aclType.equals("Producer"))
-                result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
-                        aclRequest.get("env").get(0), aclRequest.get("protocol").get(0), aclRequest.get("clusterName").get(0),
-                        aclRequest.get("acl_ip").get(0), aclRequest.get("acl_ssl").get(0), "Create",
-                        aclRequest.get("isPrefixAcl").get(0), aclRequest.get("transactionalId").get(0),
-                        aclRequest.get("aclIpPrincipleType").get(0));
-            else
-                result = manageKafkaComponents.updateConsumerAcl(aclRequest.get("topicName").get(0),
-                        aclRequest.get("env").get(0),
-                        aclRequest.get("protocol").get(0),
-                        aclRequest.get("clusterName").get(0),
-                        aclRequest.get("acl_ip").get(0),
-                        aclRequest.get("acl_ssl").get(0),
-                        aclRequest.get("consumerGroup").get(0),
-                        "Create",
-                        aclRequest.get("isPrefixAcl").get(0),
-                        aclRequest.get("aclIpPrincipleType").get(0));
-
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            if(aclNativeType.equals(AclsNativeType.NATIVE.name())){
+                if (aclType.equals("Producer"))
+                    result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
+                            aclRequest.get("env").get(0), aclRequest.get("protocol").get(0), aclRequest.get("clusterName").get(0),
+                            aclRequest.get("acl_ip").get(0), aclRequest.get("acl_ssl").get(0), "Create",
+                            aclRequest.get("isPrefixAcl").get(0), aclRequest.get("transactionalId").get(0),
+                            aclRequest.get("aclIpPrincipleType").get(0),
+                            aclRequest.get("aclsNativeType").get(0)
+                    );
+                else
+                    result = manageKafkaComponents.updateConsumerAcl(aclRequest.get("topicName").get(0),
+                            aclRequest.get("env").get(0),
+                            aclRequest.get("protocol").get(0),
+                            aclRequest.get("clusterName").get(0),
+                            aclRequest.get("acl_ip").get(0),
+                            aclRequest.get("acl_ssl").get(0),
+                            aclRequest.get("consumerGroup").get(0),
+                            "Create",
+                            aclRequest.get("isPrefixAcl").get(0),
+                            aclRequest.get("aclIpPrincipleType").get(0),
+                            aclRequest.get("aclsNativeType").get(0)
+                    );
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            }else if(aclNativeType.equals(AclsNativeType.AIVEN.name())){
+                result = aivenApiService.createAcls(aclRequest);
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            }
         }catch(Exception e){
             return new ResponseEntity<>("failure "+e.getMessage(), HttpStatus.OK);
         }
+        return new ResponseEntity<>("Not a valid request", HttpStatus.NOT_FOUND);
     }
 
     @PostMapping(value = "/deleteAcls")
@@ -168,31 +183,40 @@ public class ClusterApiController {
         String result;
         try {
             String aclType = aclRequest.get("aclType").get(0);
+            String aclNativeType = aclRequest.get("aclsNativeType").get(0);
 
-            if (aclType.equals("Producer"))
-                result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
-                        aclRequest.get("env").get(0),
-                        aclRequest.get("protocol").get(0),
-                        aclRequest.get("clusterName").get(0),
-                        aclRequest.get("acl_ip").get(0), aclRequest.get("acl_ssl").get(0), "Delete",
-                        aclRequest.get("isPrefixAcl").get(0), aclRequest.get("transactionalId").get(0),
-                        aclRequest.get("aclIpPrincipleType").get(0));
-            else
-                result = manageKafkaComponents.updateConsumerAcl(aclRequest.get("topicName").get(0),
-                        aclRequest.get("env").get(0),
-                        aclRequest.get("protocol").get(0),
-                        aclRequest.get("clusterName").get(0),
-                        aclRequest.get("acl_ip").get(0),
-                        aclRequest.get("acl_ssl").get(0),
-                        aclRequest.get("consumerGroup").get(0),
-                        "Delete",
-                        aclRequest.get("isPrefixAcl").get(0),
-                        aclRequest.get("aclIpPrincipleType").get(0));
+            if(aclNativeType.equals(AclsNativeType.NATIVE.name())) {
+                if (aclType.equals("Producer"))
+                    result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
+                            aclRequest.get("env").get(0),
+                            aclRequest.get("protocol").get(0),
+                            aclRequest.get("clusterName").get(0),
+                            aclRequest.get("acl_ip").get(0), aclRequest.get("acl_ssl").get(0), "Delete",
+                            aclRequest.get("isPrefixAcl").get(0), aclRequest.get("transactionalId").get(0),
+                            aclRequest.get("aclIpPrincipleType").get(0),
+                            aclRequest.get("aclsNativeType").get(0));
+                else
+                    result = manageKafkaComponents.updateConsumerAcl(aclRequest.get("topicName").get(0),
+                            aclRequest.get("env").get(0),
+                            aclRequest.get("protocol").get(0),
+                            aclRequest.get("clusterName").get(0),
+                            aclRequest.get("acl_ip").get(0),
+                            aclRequest.get("acl_ssl").get(0),
+                            aclRequest.get("consumerGroup").get(0),
+                            "Delete",
+                            aclRequest.get("isPrefixAcl").get(0),
+                            aclRequest.get("aclIpPrincipleType").get(0),
+                            aclRequest.get("aclsNativeType").get(0));
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            }else if(aclNativeType.equals(AclsNativeType.AIVEN.name())){
+                result = aivenApiService.deleteAcls(aclRequest);
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            }
 
-            return new ResponseEntity<>(result, HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>("failure " + e.getMessage(), HttpStatus.OK);
         }
+        return new ResponseEntity<>("Not a valid request", HttpStatus.NOT_FOUND);
     }
 
     @PostMapping(value = "/postSchema")

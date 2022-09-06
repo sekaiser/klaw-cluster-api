@@ -307,11 +307,11 @@ public class ManageKafkaComponents {
 
     public synchronized String updateProducerAcl(String topicName, String environment, String protocol, String clusterName,
                                     String acl_ip, String acl_ssl, String aclOperation, String isPrefixAcl, String transactionalId,
-                                                 String aclIpPrincipleType) {
+                                                 String aclIpPrincipleType, String aclsType) {
 
         log.info("updateProducerAcl TopicName:{} Env:{} Protocol:{} AclIP:{} AclSSL:{} AclOperation:{} PrefixAcl:{} TxnId:{}" +
-                        " aclIpPrincipleType: {}",
-                topicName, environment, protocol, acl_ip, acl_ssl, aclOperation, isPrefixAcl, transactionalId, aclIpPrincipleType);
+                        " aclIpPrincipleType: {} aclsType {}",
+                topicName, environment, protocol, acl_ip, acl_ssl, aclOperation, isPrefixAcl, transactionalId, aclIpPrincipleType, aclsType);
         AdminClient client;
         try {
             PatternType patternType;
@@ -460,11 +460,11 @@ public class ManageKafkaComponents {
 
     public synchronized String updateConsumerAcl(String topicName, String environment, String protocol, String clusterName,
                                                  String acl_ip, String acl_ssl, String consumerGroup, String aclOperation,
-                                                 String isPrefixAcl, String aclIpPrincipleType) {
+                                                 String isPrefixAcl, String aclIpPrincipleType, String aclsType) {
         log.info("updateConsumerAcl TopicName:{} Env:{} Protocol:{} AclIP:{} AclSSL:{} Consumergroup:{}" +
-                        " AclOperation:{} PrefixAcl {} aclIpPrincipleType {}",
+                        " AclOperation:{} PrefixAcl {} aclIpPrincipleType {} aclsType {} ",
                 topicName, environment, protocol, acl_ip,
-                acl_ssl, consumerGroup, aclOperation, isPrefixAcl, aclIpPrincipleType);
+                acl_ssl, consumerGroup, aclOperation, isPrefixAcl, aclIpPrincipleType, aclsType);
         AdminClient client;
         String resultStr = "";
         try {
