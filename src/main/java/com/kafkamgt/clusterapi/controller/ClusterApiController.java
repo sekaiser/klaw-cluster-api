@@ -142,10 +142,10 @@ public class ClusterApiController {
 
         String result;
         try {
-            String aclType = aclRequest.get("aclType").get(0);
             String aclNativeType = aclRequest.get("aclsNativeType").get(0);
 
             if(aclNativeType.equals(AclsNativeType.NATIVE.name())){
+                String aclType = aclRequest.get("aclType").get(0);
                 if (aclType.equals("Producer"))
                     result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
                             aclRequest.get("env").get(0), aclRequest.get("protocol").get(0), aclRequest.get("clusterName").get(0),

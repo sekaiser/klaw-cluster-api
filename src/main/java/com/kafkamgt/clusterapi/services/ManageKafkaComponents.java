@@ -303,8 +303,6 @@ public class ManageKafkaComponents {
         }
     }
 
-
-
     public synchronized String updateProducerAcl(String topicName, String environment, String protocol, String clusterName,
                                     String acl_ip, String acl_ssl, String aclOperation, String isPrefixAcl, String transactionalId,
                                                  String aclIpPrincipleType, String aclsType) {

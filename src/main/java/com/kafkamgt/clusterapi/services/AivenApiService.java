@@ -12,18 +12,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Service
 @Slf4j
 public class AivenApiService {
-
-    @Autowired
-    Environment env;
-
-    @Autowired
-    AdminClientUtils adminClientUtils;
 
     @Value("${klaw.aiven.accesstoken:accesstoken}")
     private
@@ -42,14 +35,17 @@ public class AivenApiService {
     String aivenDeleteAclsApiEndpoint;
 
     public String createAcls(MultiValueMap<String, String> permissionsMultiMap) throws Exception {
-        RestTemplate restTemplate = adminClientUtils.getRestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
         String projectName = permissionsMultiMap.get("projectName").get(0);
         String serviceName = permissionsMultiMap.get("serviceName").get(0);
 
         Set<String> keys = permissionsMultiMap.keySet();
         LinkedHashMap<String, String> permissionsMap = new LinkedHashMap<>();
+        ArrayList<String> allowedKeyList = new ArrayList<>(Arrays.asList("permission", "topic", "username"));
         for (String key : keys) {
-            permissionsMap.put(key, permissionsMultiMap.get(key).get(0));
+            if(allowedKeyList.contains(key)) {
+                permissionsMap.put(key, permissionsMultiMap.get(key).get(0));
+            }
         }
 
         String uri = aivenAddAclsApiEndpoint.replace("projectName", projectName)
@@ -69,7 +65,7 @@ public class AivenApiService {
     }
 
     public String deleteAcls(MultiValueMap<String, String> permissionsMultiMap) throws Exception {
-        RestTemplate restTemplate = adminClientUtils.getRestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
         String projectName = permissionsMultiMap.get("projectName").get(0);
         String serviceName = permissionsMultiMap.get("serviceName").get(0);
         String aclId = permissionsMultiMap.get("aclId").get(0);
@@ -90,7 +86,7 @@ public class AivenApiService {
     }
 
     ArrayList<LinkedHashMap<String, String>> listAcls(String projectName, String serviceName) throws Exception {
-        RestTemplate restTemplate = adminClientUtils.getRestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
 
         String uri = aivenListAclsApiEndpoint.replace("projectName", projectName)
                 .replace("serviceName", serviceName);
@@ -112,5 +108,9 @@ public class AivenApiService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer "+ aivenAccessToken);
         return headers;
+    }
+
+    private RestTemplate getRestTemplate(){
+        return new RestTemplate();
     }
 }

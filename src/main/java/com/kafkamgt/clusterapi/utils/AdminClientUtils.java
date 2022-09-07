@@ -40,10 +40,6 @@ public class AdminClientUtils {
     private
     String retryBackOffMsConfig;
 
-    @Value("${kafkawize.installation.type:saas}")
-    private
-    String kwInstallationType;
-
     private final HashMap<String, AdminClient> adminClientsMap = new HashMap<>();;
 
     private static MessageDigest messageDigest;
