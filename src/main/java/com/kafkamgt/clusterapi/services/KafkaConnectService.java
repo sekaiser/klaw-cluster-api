@@ -1,6 +1,8 @@
 package com.kafkamgt.clusterapi.services;
 
+import com.kafkamgt.clusterapi.models.KafkaProtocols;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,22 +16,37 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.kafkamgt.clusterapi.config.SslContextConfig.requestFactory;
+
 @Service
 @Slf4j
 public class KafkaConnectService {
+
+    public static final String HTTPS_PREFIX = "https://";
+    public static final String HTTP_PREFIX = "http://";
+
+    @Value("${klaw.aiven.kafkaconnect.credentials:credentials}")
+    private String connectCredentials;
 
     public RestTemplate getRestTemplate(){
         return new RestTemplate();
     }
 
-    public HashMap<String, String> deleteConnector(String environmentVal, String connectorName) {
-        log.info("Into deleteConnector {} {}", environmentVal, connectorName);
+    public HashMap<String, String> deleteConnector(String environmentVal, String protocol, String connectorName) {
+        log.info("Into deleteConnector {} {} {}", environmentVal, connectorName, protocol);
         HashMap<String, String> result = new HashMap<>();
+        RestTemplate restTemplate = getRestTemplate();
 
         if (environmentVal == null)
             return null;
-        String connectorsUrl = "http://" + environmentVal + "/connectors/" + connectorName;
-        RestTemplate restTemplate = getRestTemplate();
+
+        String connectorsUrl = null;
+        if(protocol.equals(KafkaProtocols.PLAINTEXT.name()))
+            connectorsUrl = HTTP_PREFIX + environmentVal + "/connectors/" + connectorName;
+        else if(protocol.equals(KafkaProtocols.SSL.name())) {
+            connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + environmentVal + "/connectors/" + connectorName;
+            restTemplate = new RestTemplate(requestFactory);
+        }
 
         try {
             restTemplate.delete(connectorsUrl, String.class);
@@ -43,14 +60,22 @@ public class KafkaConnectService {
         return result;
     }
 
-    public HashMap<String, String> updateConnector(String environmentVal, String connectorName, String connectorConfig){
-        log.info("Into updateConnector {} {} {}",  environmentVal, connectorName, connectorConfig);
+    public HashMap<String, String> updateConnector(String environmentVal, String protocol, String connectorName, String connectorConfig){
+        log.info("Into updateConnector {} {} {} {}",  environmentVal, connectorName, connectorConfig, protocol);
         HashMap<String, String> result = new HashMap<>();
 
         if (environmentVal == null)
             return null;
-        String connectorsUrl = "http://" + environmentVal + "/connectors/" + connectorName + "/config";
+
         RestTemplate restTemplate = getRestTemplate();
+        String connectorsUrl = null;
+        if(protocol.equals(KafkaProtocols.PLAINTEXT.name()))
+            connectorsUrl = HTTP_PREFIX + environmentVal + "/connectors/" + connectorName + "/config";
+        else if(protocol.equals(KafkaProtocols.SSL.name())) {
+            connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + environmentVal + "/connectors/" + connectorName + "/config";
+            restTemplate = new RestTemplate(requestFactory);
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
 
@@ -69,24 +94,21 @@ public class KafkaConnectService {
         return result;
     }
 
-    public HashMap<String, String> postNewConnector(String environmentVal, String connectorConfig){
-        log.info("Into postNewConnector {} {}",  environmentVal, connectorConfig);
+    public HashMap<String, String> postNewConnector(String environmentVal, String protocol, String connectorConfig){
+        log.info("Into postNewConnector {} {} {}",  environmentVal, connectorConfig, protocol);
         HashMap<String, String> result = new HashMap<>();
-//        String connectorConfig = "{\n" +
-//                "    \"name\": \"local-file-source11\",\n" +
-//                "\t\"config\": {\n" +
-//                "        \"connector.class\": \"FileStreamSource\",\n" +
-//                "        \"tasks.max\": \"1\",\n" +
-//                "        \"topic\": \"test-topic\",\n" +
-//                "\t\t\"file\":\"C:/Software/confluent-5.3.1-2.12/dev/etc/kafka/test1.txt\"\n" +
-//                "    }\n" +
-//                "}";
-//
-//        String environmentVal = "localhost:8083";
         if (environmentVal == null)
             return null;
-        String connectorsUrl = "http://" + environmentVal + "/connectors";
+
         RestTemplate restTemplate = getRestTemplate();
+        String connectorsUrl = null;
+        if(protocol.equals(KafkaProtocols.PLAINTEXT.name()))
+            connectorsUrl = HTTP_PREFIX + environmentVal + "/connectors";
+        else if(protocol.equals(KafkaProtocols.SSL.name())) {
+            connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + environmentVal + "/connectors";
+            restTemplate = new RestTemplate(requestFactory);
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
 
@@ -109,15 +131,23 @@ public class KafkaConnectService {
         return result;
     }
 
-    public ArrayList<String> getConnectors(String environmentVal){
+    public ArrayList<String> getConnectors(String environmentVal, String protocol){
         try {
-            log.info("Into getConnectors {}",  environmentVal);
+            log.info("Into getConnectors {} {}",  environmentVal, protocol);
             if (environmentVal == null)
                 return null;
-            String connectorsUrl = "http://" + environmentVal;
+
+            RestTemplate restTemplate = getRestTemplate();
+            String connectorsUrl = null;
+
+            if(protocol.equals(KafkaProtocols.PLAINTEXT.name()))
+                connectorsUrl = HTTP_PREFIX + environmentVal;
+            else if(protocol.equals(KafkaProtocols.SSL.name())) {
+                connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + environmentVal;
+                restTemplate = new RestTemplate(requestFactory);
+            }
 
             String uri = connectorsUrl + "/connectors";
-            RestTemplate restTemplate = getRestTemplate();
             Map<String, String> params = new HashMap<>();
             ResponseEntity<ArrayList> responseList = restTemplate.getForEntity(uri, ArrayList.class, params);
 
@@ -130,15 +160,22 @@ public class KafkaConnectService {
         }
     }
 
-    public LinkedHashMap<String, Object> getConnectorDetails(String connector, String environmentVal){
+    public LinkedHashMap<String, Object> getConnectorDetails(String connector, String environmentVal, String protocol){
         try {
-            log.info("Into getConnectorDetails {}",  environmentVal);
+            log.info("Into getConnectorDetails {} {}",  environmentVal, protocol);
             if (environmentVal == null)
                 return null;
 
-            String connectorsUrl = "http://" + environmentVal + "/connectors" + "/" + connector;
-
             RestTemplate restTemplate = getRestTemplate();
+            String connectorsUrl = null;
+
+            if(protocol.equals(KafkaProtocols.PLAINTEXT.name()))
+                connectorsUrl = HTTP_PREFIX + environmentVal + "/connectors" + "/" + connector;
+            else if(protocol.equals(KafkaProtocols.SSL.name())) {
+                connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + environmentVal + "/connectors" + "/" + connector;
+                restTemplate = new RestTemplate(requestFactory);
+            }
+
             Map<String, String> params = new HashMap<>();
 
             ResponseEntity<LinkedHashMap> responseList = restTemplate.getForEntity(connectorsUrl, LinkedHashMap.class, params);
@@ -149,6 +186,29 @@ public class KafkaConnectService {
         {
             log.error("Error in getting connector detail " + e.getMessage());
             return new LinkedHashMap<>();
+        }
+    }
+
+    protected String getKafkaConnectStatus(String environment, String protocol) {
+        String connectorsUrl = null;
+        RestTemplate restTemplate = new RestTemplate();
+
+        if(protocol.equals(KafkaProtocols.PLAINTEXT.name()))
+            connectorsUrl = HTTP_PREFIX + environment + "/connectors";
+        else if(protocol.equals(KafkaProtocols.SSL.name())) {
+            connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + environment + "/connectors";
+            restTemplate = new RestTemplate(requestFactory);
+        }
+
+        String uri = connectorsUrl ;
+        Map<String, String> params = new HashMap<String, String>();
+
+        try {
+            ResponseEntity<Object> responseNew = restTemplate.getForEntity(uri, Object.class, params);
+            return "ONLINE";
+        } catch (RestClientException e) {
+            e.printStackTrace();
+            return "OFFLINE";
         }
     }
 }

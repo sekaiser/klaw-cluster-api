@@ -4,6 +4,7 @@ import com.kafkamgt.clusterapi.models.AclsNativeType;
 import com.kafkamgt.clusterapi.services.AivenApiService;
 import com.kafkamgt.clusterapi.services.ManageKafkaComponents;
 import com.kafkamgt.clusterapi.services.MonitoringService;
+import com.kafkamgt.clusterapi.services.SchemaService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -22,6 +23,9 @@ public class ClusterApiController {
 
     @Autowired
     ManageKafkaComponents manageKafkaComponents;
+
+    @Autowired
+    SchemaService schemaService;
 
     @Autowired
     MonitoringService monitoringService;
@@ -63,10 +67,11 @@ public class ClusterApiController {
         return new ResponseEntity<>(acls, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/getSchema/{bootstrapServers}/{clusterName}/{topicName}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<TreeMap<Integer, HashMap<String,Object>>> getSchema(@PathVariable String bootstrapServers, @PathVariable String topicName,
+    @RequestMapping(value = "/getSchema/{bootstrapServers}/{protocol}/{clusterName}/{topicName}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<TreeMap<Integer, HashMap<String,Object>>> getSchema(@PathVariable String bootstrapServers, @PathVariable String protocol,
+                                                                              @PathVariable String topicName,
                                                                               @PathVariable String clusterName){
-        TreeMap<Integer, HashMap<String, Object>> schema = manageKafkaComponents.getSchema(bootstrapServers, topicName);
+        TreeMap<Integer, HashMap<String, Object>> schema = schemaService.getSchema(bootstrapServers, protocol, topicName);
 
         return new ResponseEntity<>(schema, HttpStatus.OK);
     }
@@ -225,8 +230,9 @@ public class ClusterApiController {
             String topicName = fullSchemaDetails.get("topicName").get(0);
             String schemaFull = fullSchemaDetails.get("fullSchema").get(0);
             String env = fullSchemaDetails.get("env").get(0);
+            String protocol = fullSchemaDetails.get("protocol").get(0);
 
-            String result = manageKafkaComponents.postSchema(topicName, schemaFull, env);
+            String result = schemaService.postSchema(topicName, schemaFull, env, protocol);
             return new ResponseEntity<>("Status:"+result, HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>("failure "+e.getMessage(), HttpStatus.OK);

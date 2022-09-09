@@ -21,42 +21,46 @@ public class KafkaConnectController {
     @Autowired
     KafkaConnectService kafkaConnectService;
 
-    @RequestMapping(value = "/getAllConnectors/{kafkaConnectHost}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<ArrayList<String>> getAllConnectors(@PathVariable String kafkaConnectHost){
-        return new ResponseEntity<>(kafkaConnectService.getConnectors(kafkaConnectHost), HttpStatus.OK);
+    @RequestMapping(value = "/getAllConnectors/{kafkaConnectHost}/{protocol}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<ArrayList<String>> getAllConnectors(@PathVariable String kafkaConnectHost, @PathVariable String protocol){
+        return new ResponseEntity<>(kafkaConnectService.getConnectors(kafkaConnectHost, protocol), HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/getConnectorDetails/{connectorName}/{kafkaConnectHost}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/getConnectorDetails/{connectorName}/{kafkaConnectHost}/{protocol}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<LinkedHashMap<String, Object>> getConnectorDetails(@PathVariable String connectorName,
-                                                                 @PathVariable String kafkaConnectHost){
-        return new ResponseEntity<>(kafkaConnectService.getConnectorDetails(connectorName, kafkaConnectHost), HttpStatus.OK);
+                                                                             @PathVariable String kafkaConnectHost,
+                                                                             @PathVariable String protocol){
+        return new ResponseEntity<>(kafkaConnectService.getConnectorDetails(connectorName, kafkaConnectHost, protocol), HttpStatus.OK);
     }
 
     @PostMapping(value = "/postConnector")
     public ResponseEntity<HashMap<String, String>> postConnector(@RequestBody MultiValueMap<String, String> fullConnectorConfig){
         String env = fullConnectorConfig.get("env").get(0);
+        String protocol = fullConnectorConfig.get("protocol").get(0);
         String connectorConfig = fullConnectorConfig.get("connectorConfig").get(0);
 
-        HashMap<String, String> result = kafkaConnectService.postNewConnector(env, connectorConfig);
+        HashMap<String, String> result = kafkaConnectService.postNewConnector(env, protocol, connectorConfig);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PostMapping(value = "/updateConnector")
     public ResponseEntity<HashMap<String, String>> updateConnector(@RequestBody MultiValueMap<String, String> fullConnectorConfig){
         String env = fullConnectorConfig.get("env").get(0);
+        String protocol = fullConnectorConfig.get("protocol").get(0);
         String connectorName = fullConnectorConfig.get("connectorName").get(0);
         String connectorConfig = fullConnectorConfig.get("connectorConfig").get(0);
 
-        HashMap<String, String> result = kafkaConnectService.updateConnector(env, connectorName, connectorConfig);
+        HashMap<String, String> result = kafkaConnectService.updateConnector(env, protocol, connectorName, connectorConfig);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PostMapping(value = "/deleteConnector")
     public ResponseEntity<HashMap<String, String>> deleteConnector(@RequestBody MultiValueMap<String, String> connectorConfig){
         String env = connectorConfig.get("env").get(0);
+        String protocol = connectorConfig.get("protocol").get(0);
         String connectorName = connectorConfig.get("connectorName").get(0);
 
-        HashMap<String, String> result = kafkaConnectService.deleteConnector(env, connectorName);
+        HashMap<String, String> result = kafkaConnectService.deleteConnector(env, protocol, connectorName);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

@@ -40,9 +40,11 @@ public class ManageKafkaComponents {
 
     private static final long timeOutSecsForTopics = 5;
 
-    @Value("${kafkawize.schemaregistry.compatibility.default:BACKWARD}")
-    private
-    String defaultSchemaCompatibility;
+    @Autowired
+    SchemaService schemaService;
+
+    @Autowired
+    KafkaConnectService kafkaConnectService;
 
     public ManageKafkaComponents(){}
 
@@ -58,29 +60,15 @@ public class ManageKafkaComponents {
 
     public String getStatus(String environment, String protocol, String clusterName, String clusterType){
         //log.info("getStatus {} {}", environment, protocol);
-        if(clusterType.equals("kafka"))
-            return getStatusKafka(environment, protocol, clusterName);
-        else if(clusterType.equals("schemaregistry"))
-            return getSchemaRegistryStatus(environment, protocol);
-        else if(clusterType.equals("kafkaconnect"))
-            return getKafkaConnectStatus(environment, protocol);
-        else
-            return "OFFLINE";
-    }
-
-    private String getKafkaConnectStatus(String environment, String protocol) {
-        String connectUrl = "http://" + environment + "/connectors";
-
-        String uri = connectUrl ;
-        RestTemplate restTemplate = getAdminClient.getRestTemplate();
-        Map<String, String> params = new HashMap<String, String>();
-
-        try {
-            ResponseEntity<Object> responseNew = restTemplate.getForEntity(uri, Object.class, params);
-            return "ONLINE";
-        } catch (RestClientException e) {
-            e.printStackTrace();
-            return "OFFLINE";
+        switch (clusterType) {
+            case "kafka":
+                return getStatusKafka(environment, protocol, clusterName);
+            case "schemaregistry":
+                return schemaService.getSchemaRegistryStatus(environment, protocol);
+            case "kafkaconnect":
+                return kafkaConnectService.getKafkaConnectStatus(environment, protocol);
+            default:
+                return "OFFLINE";
         }
     }
 
@@ -94,22 +82,6 @@ public class ManageKafkaComponents {
                 return "OFFLINE";
 
         } catch (Exception e){
-            e.printStackTrace();
-            return "OFFLINE";
-        }
-    }
-
-    public String getSchemaRegistryStatus(String environment, String protocol){
-        String schemaRegistryUrl = "http://" + environment + "/subjects";
-
-        String uri = schemaRegistryUrl ;
-        RestTemplate restTemplate = getAdminClient.getRestTemplate();
-        Map<String, String> params = new HashMap<String, String>();
-
-        try {
-            ResponseEntity<Object> responseNew = restTemplate.getForEntity(uri, Object.class, params);
-            return "ONLINE";
-        } catch (RestClientException e) {
             e.printStackTrace();
             return "OFFLINE";
         }
@@ -605,148 +577,5 @@ public class ManageKafkaComponents {
         return resultStr ;
     }
 
-    public synchronized String postSchema(String topicName, String schema, String environmentVal){
-            try {
-                log.info("Into post schema request TopicName:{} Env:{}",topicName, environmentVal);
-                if(environmentVal == null)
-                    return "Cannot retrieve SchemaRegistry Url";
 
-                // set default compatibility
-                setSchemaCompatibility(environmentVal, topicName, false);
-
-                String schemaRegistryUrl = "http://" + environmentVal;
-
-                String uri = schemaRegistryUrl + "/subjects/" +
-                        topicName + "-value/versions";
-                RestTemplate restTemplate = getAdminClient.getRestTemplate();
-
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("schema", schema);
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("Content-Type", "application/vnd.schemaregistry.v1+json");
-                HttpEntity<Map<String, String>> request = new HttpEntity<>(params, headers);
-                ResponseEntity<String> responseNew = restTemplate.postForEntity(uri, request, String.class);
-
-                String updateTopicReqStatus = responseNew.getBody();
-                log.info(responseNew.getBody());
-
-                return updateTopicReqStatus;
-            }
-            catch(Exception e){
-                log.error(e.getMessage());
-                if(((HttpClientErrorException.Conflict) e).getStatusCode().value() == 409)
-                {
-                    return "Schema being registered is incompatible with an earlier schema";
-                }
-                return "Failure in registering schema.";
-            }
-    }
-
-    public TreeMap<Integer, HashMap<String, Object>> getSchema(String environmentVal, String topicName){
-        try {
-            log.info("Into getSchema request {} {}", topicName, environmentVal);
-            if (environmentVal == null)
-                return null;
-
-            List<Integer> versionsList = getSchemaVersions(environmentVal, topicName);
-            String schemaCompatibility = getSchemaCompatibility(environmentVal, topicName);
-            String schemaRegistryUrl = "http://" + environmentVal;
-            TreeMap<Integer, HashMap<String, Object>> allSchemaObjects = new TreeMap<>();
-
-            for (Integer schemaVersion : versionsList) {
-                String uri = schemaRegistryUrl + "/subjects/" +
-                        topicName + "-value/versions/" + schemaVersion;
-                RestTemplate restTemplate = getAdminClient.getRestTemplate();
-                Map<String, String> params = new HashMap<String, String>();
-
-                ResponseEntity<HashMap> responseNew = restTemplate.getForEntity(uri, HashMap.class, params);
-                HashMap<String, Object> schemaResponse = responseNew.getBody();
-                if(schemaResponse != null)
-                    schemaResponse.put("compatibility", schemaCompatibility);
-
-                log.info(Objects.requireNonNull(responseNew.getBody()).toString());
-                allSchemaObjects.put(schemaVersion, schemaResponse);
-            }
-
-            return allSchemaObjects;
-        }catch (Exception e)
-        {
-            log.error("Error from getSchema : " + e.getMessage());
-            return new TreeMap<>();
-        }
-    }
-
-    private List<Integer> getSchemaVersions(String environmentVal, String topicName){
-        try {
-            log.info("Into getSchema versions {} {}", topicName, environmentVal);
-            if (environmentVal == null)
-                return null;
-            String schemaRegistryUrl = "http://" + environmentVal;
-
-            String uri = schemaRegistryUrl + "/subjects/" +
-                    topicName + "-value/versions";
-            RestTemplate restTemplate = getAdminClient.getRestTemplate();
-            Map<String, String> params = new HashMap<String, String>();
-
-            ResponseEntity<ArrayList> responseList = restTemplate.getForEntity(uri, ArrayList.class, params);
-            log.info("Schema versions " + responseList);
-            return responseList.getBody();
-        }catch (Exception e)
-        {
-            log.error("Error in getting versions " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    private String getSchemaCompatibility(String environmentVal, String topicName){
-        try {
-            log.info("Into getSchema compatibility {} {}", topicName, environmentVal);
-            if (environmentVal == null)
-                return null;
-            String schemaRegistryUrl = "http://" + environmentVal;
-
-            String uri = schemaRegistryUrl + "/config/" +
-                    topicName + "-value";
-            RestTemplate restTemplate = getAdminClient.getRestTemplate();
-            Map<String, String> params = new HashMap<String, String>();
-
-            ResponseEntity<HashMap> responseList = restTemplate.getForEntity(uri, HashMap.class, params);
-            log.info("Schema compatibility " + responseList);
-            return (String)responseList.getBody().get("compatibilityLevel");
-        }catch (Exception e)
-        {
-            log.error("Error in getting schema compatibility " + e.getMessage());
-            return "NOT SET";
-        }
-    }
-
-    private boolean setSchemaCompatibility(String environmentVal, String topicName, boolean isForce){
-        try {
-            log.info("Into setSchema compatibility {} {}", topicName, environmentVal);
-            if (environmentVal == null)
-                return false;
-            String schemaRegistryUrl = "http://" + environmentVal;
-
-            String uri = schemaRegistryUrl + "/config/" +
-                    topicName + "-value";
-            RestTemplate restTemplate = getAdminClient.getRestTemplate();
-
-            Map<String, String> params = new HashMap<>();
-            if(isForce)
-                params.put("compatibility", "NONE");
-            else
-                params.put("compatibility", defaultSchemaCompatibility);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", "application/vnd.schemaregistry.v1+json");
-            HttpEntity<Map<String, String>> request = new HttpEntity<>(params, headers);
-            restTemplate.put(uri, request, String.class);
-            return true;
-        }catch (Exception e)
-        {
-            log.error("Error in setting schema compatibility " + e.getMessage());
-            return false;
-        }
-    }
 }

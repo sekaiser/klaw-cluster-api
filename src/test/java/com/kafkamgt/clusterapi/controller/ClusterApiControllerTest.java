@@ -5,6 +5,7 @@ import com.kafkamgt.clusterapi.UtilMethods;
 import com.kafkamgt.clusterapi.models.AclIPPrincipleType;
 import com.kafkamgt.clusterapi.models.AclsNativeType;
 import com.kafkamgt.clusterapi.services.ManageKafkaComponents;
+import com.kafkamgt.clusterapi.services.SchemaService;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -33,6 +34,9 @@ public class ClusterApiControllerTest {
 
     @MockBean
     private ManageKafkaComponents manageKafkaComponents;
+
+    @MockBean
+    private SchemaService schemaService;
 
     private MockMvc mvc;
 
@@ -219,7 +223,7 @@ public class ClusterApiControllerTest {
         MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesSchema();
         String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
 
-        when(manageKafkaComponents.postSchema(anyString(), anyString(), anyString())).thenReturn("success");
+        when(schemaService.postSchema(anyString(), anyString(), anyString(), anyString())).thenReturn("success");
 
         String response = mvc.perform(MockMvcRequestBuilders
                 .post("/topics/postSchema")
@@ -237,7 +241,7 @@ public class ClusterApiControllerTest {
         MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesSchema();
         String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
 
-        when(manageKafkaComponents.postSchema(anyString(), anyString(), anyString()))
+        when(schemaService.postSchema(anyString(), anyString(), anyString(), anyString()))
                 .thenThrow(new RuntimeException("Error registering schema"));
 
         String response = mvc.perform(MockMvcRequestBuilders

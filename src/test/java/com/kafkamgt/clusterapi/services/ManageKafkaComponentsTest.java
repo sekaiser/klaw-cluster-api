@@ -83,6 +83,8 @@ public class ManageKafkaComponentsTest {
 
     private ManageKafkaComponents manageKafkaComponents;
 
+    private SchemaService schemaService;
+
     @Before
     public void setUp() {
         manageKafkaComponents = new ManageKafkaComponents(env, getAdminClient);
@@ -298,7 +300,7 @@ public class ManageKafkaComponentsTest {
                         eq(String.class)))
                 .thenReturn(response);
 
-        String result = manageKafkaComponents.postSchema(topicName, schema, environmentVal);
+        String result = schemaService.postSchema(topicName, schema, environmentVal, "PLAINTEXT");
         assertEquals("Schema created id : 101", result);
     }
 
@@ -306,7 +308,7 @@ public class ManageKafkaComponentsTest {
     public void postSchema2() {
         String topicName="testtopic1", schema="{type:string}", environmentVal=null;
 
-        String result = manageKafkaComponents.postSchema(topicName, schema, environmentVal);
+        String result = schemaService.postSchema(topicName, schema, environmentVal, "PLAINTEXT");
         assertEquals("Cannot retrieve SchemaRegistry Url", result);
     }
 

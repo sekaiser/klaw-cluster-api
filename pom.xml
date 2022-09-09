@@ -28,6 +28,7 @@
         <maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
         <jasyptencrypt.version>3.0.4</jasyptencrypt.version>
+        <apachehttp.version>4.5.13</apachehttp.version>
     </properties>
 
     <dependencies>
@@ -105,6 +106,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>31.0.1-jre</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${apachehttp.version}</version>
         </dependency>
 
         <dependency>
