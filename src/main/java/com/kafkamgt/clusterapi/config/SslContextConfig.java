@@ -7,7 +7,6 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.ResourceUtils;
@@ -67,8 +66,6 @@ public class SslContextConfig {
 
     protected KeyStore getStore(String secret, String storeLoc) throws
             KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
-//        ClassPathResource resource = new ClassPathResource(storeLoc);
-//        File key = new File(storeLoc);
 
         File key = ResourceUtils.getFile(storeLoc);
 

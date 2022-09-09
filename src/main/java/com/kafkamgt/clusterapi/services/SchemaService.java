@@ -3,10 +3,8 @@ package com.kafkamgt.clusterapi.services;
 import com.kafkamgt.clusterapi.models.KafkaProtocols;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -32,7 +30,7 @@ public class SchemaService {
     private
     String aivenAccessToken;
 
-    @Value("${klaw.aiven.schema.credentials:credentials}")
+    @Value("${klaw.aiven.karapace.credentials:credentials}")
     private String schemaCredentials;
 
     public synchronized String postSchema(String topicName, String schema, String environmentVal, String protocol){
@@ -229,23 +227,6 @@ public class SchemaService {
     public RestTemplate getRestTemplate(){
         return new RestTemplate();
     }
-
-//    @PostConstruct
-//    public void trySchemas(){
-//        String schemaRegistryUrl = "https://avnadmin:AVNS_cuCgXkKYxOVLfS0eTqZ@kafka-acls-kw-dev-sandbox.aivencloud.com:12696";
-//
-//        String uri = schemaRegistryUrl + "/subjects";
-//        RestTemplate restTemplate = new RestTemplate(requestFactory);
-//        Map<String, String> params = new HashMap<>();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("Authorization", "Bearer "+ aivenAccessToken);
-//
-//        HttpEntity<Map<String, String>> request = new HttpEntity<>(params, headers);
-//
-//        ResponseEntity<Object> responseList = restTemplate.exchange(
-//                uri, HttpMethod.GET, request, new ParameterizedTypeReference<>() {});
-//        System.out.println(responseList);
-//    }
 
     protected String getSchemaRegistryStatus(String environment, String protocol){
 
