@@ -143,8 +143,9 @@ public class ClusterApiController {
     }
 
     @PostMapping(value = "/createAcls")
-    public ResponseEntity<String> createAcls(@RequestBody MultiValueMap<String, String> aclRequest){
+    public ResponseEntity<HashMap<String, String>> createAcls(@RequestBody MultiValueMap<String, String> aclRequest){
 
+        HashMap<String, String> resultMap = new HashMap<>();
         String result;
         try {
             String aclNativeType = aclRequest.get("aclsNativeType").get(0);
@@ -152,7 +153,7 @@ public class ClusterApiController {
             if(aclNativeType.equals(AclsNativeType.NATIVE.name())){
                 String aclType = aclRequest.get("aclType").get(0);
                 if (aclType.equals("Producer"))
-                    result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
+                     result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
                             aclRequest.get("env").get(0), aclRequest.get("protocol").get(0), aclRequest.get("clusterName").get(0),
                             aclRequest.get("acl_ip").get(0), aclRequest.get("acl_ssl").get(0), "Create",
                             aclRequest.get("isPrefixAcl").get(0), aclRequest.get("transactionalId").get(0),
@@ -172,25 +173,29 @@ public class ClusterApiController {
                             aclRequest.get("aclIpPrincipleType").get(0),
                             aclRequest.get("aclsNativeType").get(0)
                     );
-                return new ResponseEntity<>(result, HttpStatus.OK);
+                resultMap.put("result", result);
+                return new ResponseEntity<>(resultMap, HttpStatus.OK);
             }else if(aclNativeType.equals(AclsNativeType.AIVEN.name())){
-                result = aivenApiService.createAcls(aclRequest);
-                return new ResponseEntity<>(result, HttpStatus.OK);
+                resultMap = aivenApiService.createAcls(aclRequest);
+                return new ResponseEntity<>(resultMap, HttpStatus.OK);
             }
         }catch(Exception e){
-            return new ResponseEntity<>("failure "+e.getMessage(), HttpStatus.OK);
+            resultMap.put("result", "failure "+e.getMessage());
+            return new ResponseEntity<>(resultMap, HttpStatus.OK);
         }
-        return new ResponseEntity<>("Not a valid request", HttpStatus.NOT_FOUND);
+        resultMap.put("result", "Not a valid request");
+        return new ResponseEntity<>(resultMap, HttpStatus.NOT_FOUND);
     }
 
     @PostMapping(value = "/deleteAcls")
-    public ResponseEntity<String> deleteAcls(@RequestBody MultiValueMap<String, String> aclRequest){
+    public ResponseEntity<HashMap<String, String>> deleteAcls(@RequestBody MultiValueMap<String, String> aclRequest){
+        HashMap<String, String> resultMap = new HashMap<>();
         String result;
         try {
-            String aclType = aclRequest.get("aclType").get(0);
             String aclNativeType = aclRequest.get("aclsNativeType").get(0);
 
             if(aclNativeType.equals(AclsNativeType.NATIVE.name())) {
+                String aclType = aclRequest.get("aclType").get(0);
                 if (aclType.equals("Producer"))
                     result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
                             aclRequest.get("env").get(0),
@@ -212,16 +217,20 @@ public class ClusterApiController {
                             aclRequest.get("isPrefixAcl").get(0),
                             aclRequest.get("aclIpPrincipleType").get(0),
                             aclRequest.get("aclsNativeType").get(0));
-                return new ResponseEntity<>(result, HttpStatus.OK);
+                resultMap.put("result", result);
+                return new ResponseEntity<>(resultMap, HttpStatus.OK);
             }else if(aclNativeType.equals(AclsNativeType.AIVEN.name())){
                 result = aivenApiService.deleteAcls(aclRequest);
-                return new ResponseEntity<>(result, HttpStatus.OK);
+                resultMap.put("result", result);
+                return new ResponseEntity<>(resultMap, HttpStatus.OK);
             }
 
         }catch(Exception e){
-            return new ResponseEntity<>("failure " + e.getMessage(), HttpStatus.OK);
+            resultMap.put("result", "failure "+e.getMessage());
+            return new ResponseEntity<>(resultMap, HttpStatus.OK);
         }
-        return new ResponseEntity<>("Not a valid request", HttpStatus.NOT_FOUND);
+        resultMap.put("result", "Not a valid request");
+        return new ResponseEntity<>(resultMap, HttpStatus.NOT_FOUND);
     }
 
     @PostMapping(value = "/postSchema")

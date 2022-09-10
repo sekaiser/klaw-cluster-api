@@ -1,5 +1,9 @@
 package com.kafkamgt.clusterapi.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kafkamgt.clusterapi.models.AivenAclResponse;
+import com.kafkamgt.clusterapi.models.AivenAclStruct;
 import com.kafkamgt.clusterapi.utils.AdminClientUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +12,12 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Service
@@ -34,7 +40,23 @@ public class AivenApiService {
     private
     String aivenDeleteAclsApiEndpoint;
 
-    public String createAcls(MultiValueMap<String, String> permissionsMultiMap) throws Exception {
+    @PostConstruct
+    private void verifyAcls(){
+        try {
+            MultiValueMap<String, String> linkedHashMap = new LinkedMultiValueMap<>();
+            linkedHashMap.add("permission","read");
+            linkedHashMap.add("topic","testtopic");
+            linkedHashMap.add("username","avnadmin6");
+            linkedHashMap.add("projectName", "dev-sandbox");
+            linkedHashMap.add("serviceName","kafka-acls-kw");
+            createAcls(linkedHashMap);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public HashMap<String, String> createAcls(MultiValueMap<String, String> permissionsMultiMap) throws Exception {
+        HashMap<String, String> resultMap = new HashMap<>();
         RestTemplate restTemplate = getRestTemplate();
         String projectName = permissionsMultiMap.get("projectName").get(0);
         String serviceName = permissionsMultiMap.get("serviceName").get(0);
@@ -56,27 +78,42 @@ public class AivenApiService {
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(uri, request, String.class);
-            if(response.getStatusCode().equals(HttpStatus.OK))
-                return "success";
-            else return "Failure in adding acls" + response.getBody();
+            AivenAclResponse aivenAclResponse = new ObjectMapper().readValue(response.getBody(), AivenAclResponse.class);
+            Optional<AivenAclStruct> aivenAclStructOptional =  Arrays.stream(aivenAclResponse.getAcl())
+                    .filter(acl -> acl.getUsername().equals(permissionsMultiMap.get("username").get(0))
+                    && acl.getTopic().equals(permissionsMultiMap.get("topic").get(0))
+                    && acl.getPermission().equals(permissionsMultiMap.get("permission").get(0)))
+                    .findFirst();
+            aivenAclStructOptional.ifPresent(aivenAclStruct -> resultMap.put("aivenaclid", aivenAclStruct.getId()));
+
+            if(response.getStatusCode().equals(HttpStatus.OK)){
+                resultMap.put("result", "success");
+            }
+            else {
+                resultMap.put("result", "Failure in adding acls" + response.getBody());
+            }
+
+            return resultMap;
         }catch (Exception e){
-            throw new Exception("Error in adding acls "+ e.getMessage());
+            resultMap.put("result", "Failure in adding acls" + e.getMessage());
+            return resultMap;
         }
     }
 
     public String deleteAcls(MultiValueMap<String, String> permissionsMultiMap) throws Exception {
         RestTemplate restTemplate = getRestTemplate();
-        String projectName = permissionsMultiMap.get("projectName").get(0);
-        String serviceName = permissionsMultiMap.get("serviceName").get(0);
-        String aclId = permissionsMultiMap.get("aclId").get(0);
 
-        String uri = aivenDeleteAclsApiEndpoint.replace("projectName", projectName)
-                .replace("serviceName", serviceName)
-                .replace("aclId", aclId);
-
-        HttpHeaders headers = getHttpHeaders();
-        HttpEntity<?> request = new HttpEntity<>(headers);
         try {
+            String projectName = permissionsMultiMap.get("projectName").get(0);
+            String serviceName = permissionsMultiMap.get("serviceName").get(0);
+            String aclId = permissionsMultiMap.get("aivenaclid").get(0);
+
+            String uri = aivenDeleteAclsApiEndpoint.replace("projectName", projectName)
+                    .replace("serviceName", serviceName)
+                    .replace("aclId", aclId);
+
+            HttpHeaders headers = getHttpHeaders();
+            HttpEntity<?> request = new HttpEntity<>(headers);
             restTemplate.exchange(uri, HttpMethod.DELETE, request, Object.class);
         }catch (Exception e){
             throw new Exception("Error in deleting acls "+ e.getMessage());
