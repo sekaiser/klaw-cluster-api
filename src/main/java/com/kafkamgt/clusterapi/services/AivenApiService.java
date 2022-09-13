@@ -95,6 +95,7 @@ public class AivenApiService {
 
             return resultMap;
         }catch (Exception e){
+            log.error(e.toString());
             resultMap.put("result", "Failure in adding acls" + e.getMessage());
             return resultMap;
         }
@@ -116,6 +117,7 @@ public class AivenApiService {
             HttpEntity<?> request = new HttpEntity<>(headers);
             restTemplate.exchange(uri, HttpMethod.DELETE, request, Object.class);
         }catch (Exception e){
+            log.error(e.toString());
             throw new Exception("Error in deleting acls "+ e.getMessage());
         }
 
@@ -137,6 +139,7 @@ public class AivenApiService {
 
             return Objects.requireNonNull(responseEntity.getBody()).get("acl");
         } catch (RestClientException e) {
+            log.error(e.toString());
             throw new Exception("Error in listing acls : "+e.getMessage());
         }
     }

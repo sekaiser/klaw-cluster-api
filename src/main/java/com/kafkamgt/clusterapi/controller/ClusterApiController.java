@@ -11,10 +11,7 @@ import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 @RestController
 @RequestMapping("/topics")
@@ -143,9 +140,9 @@ public class ClusterApiController {
     }
 
     @PostMapping(value = "/createAcls")
-    public ResponseEntity<HashMap<String, String>> createAcls(@RequestBody MultiValueMap<String, String> aclRequest){
+    public ResponseEntity<Map<String, String>> createAcls(@RequestBody MultiValueMap<String, String> aclRequest){
 
-        HashMap<String, String> resultMap = new HashMap<>();
+        Map<String, String> resultMap = new HashMap<>();
         String result;
         try {
             String aclNativeType = aclRequest.get("aclsNativeType").get(0);
@@ -188,8 +185,8 @@ public class ClusterApiController {
     }
 
     @PostMapping(value = "/deleteAcls")
-    public ResponseEntity<HashMap<String, String>> deleteAcls(@RequestBody MultiValueMap<String, String> aclRequest){
-        HashMap<String, String> resultMap = new HashMap<>();
+    public ResponseEntity<Map<String, String>> deleteAcls(@RequestBody MultiValueMap<String, String> aclRequest){
+        Map<String, String> resultMap = new HashMap<>();
         String result;
         try {
             String aclNativeType = aclRequest.get("aclsNativeType").get(0);
