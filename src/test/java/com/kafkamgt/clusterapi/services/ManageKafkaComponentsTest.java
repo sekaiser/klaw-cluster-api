@@ -3,7 +3,7 @@ package com.kafkamgt.clusterapi.services;
 import com.kafkamgt.clusterapi.UtilMethods;
 import com.kafkamgt.clusterapi.models.AclIPPrincipleType;
 import com.kafkamgt.clusterapi.models.AclsNativeType;
-import com.kafkamgt.clusterapi.utils.AdminClientUtils;
+import com.kafkamgt.clusterapi.utils.ClusterApiUtils;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 public class ManageKafkaComponentsTest {
 
     @Mock
-    private AdminClientUtils getAdminClient;
+    private ClusterApiUtils getAdminClient;
 
     @Mock
     private Environment env;
@@ -172,7 +172,7 @@ public class ManageKafkaComponentsTest {
         when(listTopicsResult.names()).thenReturn(kafkaFuture);
         when(kafkaFuture.get()).thenReturn(list);
 
-        when(adminClient.describeTopics(any())).thenReturn(describeTopicsResult);
+        when(adminClient.describeTopics((Collection<String>) any())).thenReturn(describeTopicsResult);
         when(describeTopicsResult.all()).thenReturn(kafkaFutureTopicdesc);
         when(kafkaFutureTopicdesc.get()).thenReturn(getTopicDescs());
 

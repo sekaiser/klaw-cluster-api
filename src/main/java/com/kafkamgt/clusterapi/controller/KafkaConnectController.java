@@ -22,7 +22,7 @@ public class KafkaConnectController {
     KafkaConnectService kafkaConnectService;
 
     @RequestMapping(value = "/getAllConnectors/{kafkaConnectHost}/{protocol}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<ArrayList<String>> getAllConnectors(@PathVariable String kafkaConnectHost, @PathVariable String protocol){
+    public ResponseEntity<List<String>> getAllConnectors(@PathVariable String kafkaConnectHost, @PathVariable String protocol){
         return new ResponseEntity<>(kafkaConnectService.getConnectors(kafkaConnectHost, protocol), HttpStatus.OK);
     }
 
@@ -34,33 +34,33 @@ public class KafkaConnectController {
     }
 
     @PostMapping(value = "/postConnector")
-    public ResponseEntity<HashMap<String, String>> postConnector(@RequestBody MultiValueMap<String, String> fullConnectorConfig){
+    public ResponseEntity<Map<String, String>> postConnector(@RequestBody MultiValueMap<String, String> fullConnectorConfig){
         String env = fullConnectorConfig.get("env").get(0);
         String protocol = fullConnectorConfig.get("protocol").get(0);
         String connectorConfig = fullConnectorConfig.get("connectorConfig").get(0);
 
-        HashMap<String, String> result = kafkaConnectService.postNewConnector(env, protocol, connectorConfig);
+        Map<String, String> result = kafkaConnectService.postNewConnector(env, protocol, connectorConfig);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PostMapping(value = "/updateConnector")
-    public ResponseEntity<HashMap<String, String>> updateConnector(@RequestBody MultiValueMap<String, String> fullConnectorConfig){
+    public ResponseEntity<Map<String, String>> updateConnector(@RequestBody MultiValueMap<String, String> fullConnectorConfig){
         String env = fullConnectorConfig.get("env").get(0);
         String protocol = fullConnectorConfig.get("protocol").get(0);
         String connectorName = fullConnectorConfig.get("connectorName").get(0);
         String connectorConfig = fullConnectorConfig.get("connectorConfig").get(0);
 
-        HashMap<String, String> result = kafkaConnectService.updateConnector(env, protocol, connectorName, connectorConfig);
+        Map<String, String> result = kafkaConnectService.updateConnector(env, protocol, connectorName, connectorConfig);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PostMapping(value = "/deleteConnector")
-    public ResponseEntity<HashMap<String, String>> deleteConnector(@RequestBody MultiValueMap<String, String> connectorConfig){
+    public ResponseEntity<Map<String, String>> deleteConnector(@RequestBody MultiValueMap<String, String> connectorConfig){
         String env = connectorConfig.get("env").get(0);
         String protocol = connectorConfig.get("protocol").get(0);
         String connectorName = connectorConfig.get("connectorName").get(0);
 
-        HashMap<String, String> result = kafkaConnectService.deleteConnector(env, protocol, connectorName);
+        Map<String, String> result = kafkaConnectService.deleteConnector(env, protocol, connectorName);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

@@ -1,28 +1,21 @@
 package com.kafkamgt.clusterapi.services;
 
-import com.kafkamgt.clusterapi.utils.AdminClientUtils;
+import com.kafkamgt.clusterapi.utils.ClusterApiUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.*;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.TopicPartitionInfo;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class MonitoringService {
 
     @Autowired
-    AdminClientUtils adminClientUtils;
+    ClusterApiUtils clusterApiUtils;
 
     private static final long timeOutSecsForAcls = 5;
 
@@ -31,7 +24,7 @@ public class MonitoringService {
         log.info("getConsumerGroupDetails topicName {} consumerGroupId {} environment {} protocol {} clusterName {}",
                 topicName, consumerGroupId, environment, protocol, clusterName);
 
-        AdminClient adminClient = adminClientUtils.getAdminClient(environment, protocol, clusterName);
+        AdminClient adminClient = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
 
         List<HashMap<String, String>> consumerGroupOffsetList = new ArrayList<>();
         HashMap<String, String> offsetDetails;

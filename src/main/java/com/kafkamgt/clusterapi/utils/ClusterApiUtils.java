@@ -1,7 +1,10 @@
 package com.kafkamgt.clusterapi.utils;
 
 import com.google.common.base.Strings;
+import com.kafkamgt.clusterapi.models.KafkaClustersType;
+import com.kafkamgt.clusterapi.models.KafkaProtocols;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -17,13 +20,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
+
+import static com.kafkamgt.clusterapi.config.SslContextConfig.requestFactory;
 
 @Service
 @Slf4j
-public class AdminClientUtils {
+public class ClusterApiUtils {
+
+    public static final String HTTPS_PREFIX = "https://";
+    public static final String HTTP_PREFIX = "http://";
 
     @Autowired
     Environment env;
@@ -39,6 +45,12 @@ public class AdminClientUtils {
     @Value("${kafkawize.retry.backoff.ms:15000}")
     private
     String retryBackOffMsConfig;
+
+    @Value("${klaw.aiven.kafkaconnect.credentials:credentials}")
+    private String connectCredentials;
+
+    @Value("${klaw.aiven.karapace.credentials}")
+    private String schemaRegistryCredentials;
 
     private final HashMap<String, AdminClient> adminClientsMap = new HashMap<>();;
 
@@ -288,5 +300,26 @@ public class AdminClientUtils {
         props.put(AdminClientConfig.RETRIES_CONFIG, retriesConfig);
         props.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeOutMs);
         props.put(AdminClientConfig.RETRY_BACKOFF_MS_CONFIG, retryBackOffMsConfig);
+    }
+
+    public Pair<String, RestTemplate> getRequestDetails(String suffixUrl, String protocol, KafkaClustersType kafkaClustersType){
+        RestTemplate restTemplate;
+        String connectorsUrl = "";
+
+        if(KafkaProtocols.PLAINTEXT.name().equals(protocol)) {
+            connectorsUrl = HTTP_PREFIX + suffixUrl;
+            restTemplate = new RestTemplate();
+        }
+        else if(KafkaProtocols.SSL.name().equals(protocol)) {
+            if(kafkaClustersType.equals(KafkaClustersType.KAFKA_CONNECT))
+                connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + suffixUrl;
+            else if(kafkaClustersType.equals(KafkaClustersType.SCHEMA_REGISTRY))
+                connectorsUrl = HTTPS_PREFIX + schemaRegistryCredentials + "@" + suffixUrl;
+            restTemplate = new RestTemplate(requestFactory);
+        }else {
+            restTemplate = new RestTemplate();
+        }
+
+        return Pair.of(connectorsUrl, restTemplate);
     }
 }

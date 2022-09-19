@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,11 +42,11 @@ public class GetAdminClientTest {
 
     @Mock private HashMap<String, AdminClient> adminClientsMap;
 
-    AdminClientUtils getAdminClient;
+    ClusterApiUtils getAdminClient;
 
     @Before
     public void setUp() throws Exception {
-       getAdminClient = new AdminClientUtils();
+       getAdminClient = new ClusterApiUtils();
         ReflectionTestUtils.setField(getAdminClient, "adminClientsMap", adminClientsMap);
         ReflectionTestUtils.setField(getAdminClient, "env", env);
     }

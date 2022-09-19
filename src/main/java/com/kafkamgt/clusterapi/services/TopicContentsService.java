@@ -1,6 +1,6 @@
 package com.kafkamgt.clusterapi.services;
 
-import com.kafkamgt.clusterapi.utils.AdminClientUtils;
+import com.kafkamgt.clusterapi.utils.ClusterApiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -20,7 +20,7 @@ import java.util.*;
 public class TopicContentsService {
 
     @Autowired
-    AdminClientUtils adminClientUtils;
+    ClusterApiUtils clusterApiUtils;
 
     @Value("${kafkawize.topiccontents.consumergroup.id:notdefined}")
     private String kwGenericConsumerGroupId;
@@ -80,7 +80,7 @@ public class TopicContentsService {
         Properties props = new Properties();
 
         if(protocol.equals("SSL")) {
-            props = adminClientUtils.getSslConfig("");
+            props = clusterApiUtils.getSslConfig("");
             props.put("security.protocol", "SSL");
         }
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

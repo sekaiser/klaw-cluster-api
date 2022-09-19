@@ -1,7 +1,8 @@
 package com.kafkamgt.clusterapi.services;
 
 import com.kafkamgt.clusterapi.models.AclIPPrincipleType;
-import com.kafkamgt.clusterapi.utils.AdminClientUtils;
+import com.kafkamgt.clusterapi.models.ClusterResponseStatus;
+import com.kafkamgt.clusterapi.utils.ClusterApiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaException;
@@ -11,15 +12,8 @@ import org.apache.kafka.common.resource.ResourcePattern;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -30,27 +24,32 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class ManageKafkaComponents {
 
-    @Autowired
     Environment env;
 
-    @Autowired
-    AdminClientUtils getAdminClient;
+    ClusterApiUtils getAdminClient;
 
     private static final long timeOutSecsForAcls = 5;
 
     private static final long timeOutSecsForTopics = 5;
 
-    @Autowired
     SchemaService schemaService;
 
-    @Autowired
     KafkaConnectService kafkaConnectService;
 
     public ManageKafkaComponents(){}
 
-    public ManageKafkaComponents(Environment env, AdminClientUtils getAdminClient){
+    public ManageKafkaComponents(Environment env, ClusterApiUtils getAdminClient){
         this.env = env;
         this.getAdminClient = getAdminClient;
+    }
+
+    @Autowired
+    public ManageKafkaComponents(Environment env, ClusterApiUtils getAdminClient, SchemaService schemaService,
+                                 KafkaConnectService kafkaConnectService) {
+        this.env = env;
+        this.getAdminClient = getAdminClient;
+        this.schemaService = schemaService;
+        this.kafkaConnectService = kafkaConnectService;
     }
 
 //    public String reloadTruststore(String protocol, String clusterName){
@@ -68,7 +67,7 @@ public class ManageKafkaComponents {
             case "kafkaconnect":
                 return kafkaConnectService.getKafkaConnectStatus(environment, protocol);
             default:
-                return "OFFLINE";
+                return ClusterResponseStatus.OFFLINE.value;
         }
     }
 
@@ -76,14 +75,15 @@ public class ManageKafkaComponents {
         try {
             AdminClient client = getAdminClient.getAdminClient(environment, protocol, clusterName);
             if(client != null) {
-                return "ONLINE";
+                return ClusterResponseStatus.ONLINE.value;
             }
             else
-                return "OFFLINE";
+                return ClusterResponseStatus.OFFLINE.value;
 
         } catch (Exception e){
             e.printStackTrace();
-            return "OFFLINE";
+            log.error(e.getMessage());
+            return ClusterResponseStatus.OFFLINE.value;
         }
     }
 

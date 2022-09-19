@@ -54,13 +54,13 @@ public class SslContextConfig {
                      | CertificateException | UnrecoverableKeyException | IOException e) {
                 log.error(e.getMessage());
             }
-            SSLConnectionSocketFactory csf = null;
+            SSLConnectionSocketFactory csf;
             if (sslContext != null) {
                 csf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+                CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
+                requestFactory = new HttpComponentsClientHttpRequestFactory();
+                requestFactory.setHttpClient(httpClient);
             }
-            CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
-            requestFactory = new HttpComponentsClientHttpRequestFactory();
-            requestFactory.setHttpClient(httpClient);
         }
     }
 

@@ -65,10 +65,10 @@ public class ClusterApiController {
     }
 
     @RequestMapping(value = "/getSchema/{bootstrapServers}/{protocol}/{clusterName}/{topicName}", method = RequestMethod.GET,produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<TreeMap<Integer, HashMap<String,Object>>> getSchema(@PathVariable String bootstrapServers, @PathVariable String protocol,
+    public ResponseEntity<Map<Integer, HashMap<String,Object>>> getSchema(@PathVariable String bootstrapServers, @PathVariable String protocol,
                                                                               @PathVariable String topicName,
                                                                               @PathVariable String clusterName){
-        TreeMap<Integer, HashMap<String, Object>> schema = schemaService.getSchema(bootstrapServers, protocol, topicName);
+        Map<Integer, HashMap<String, Object>> schema = schemaService.getSchema(bootstrapServers, protocol, topicName);
 
         return new ResponseEntity<>(schema, HttpStatus.OK);
     }
@@ -147,9 +147,9 @@ public class ClusterApiController {
         try {
             String aclNativeType = aclRequest.get("aclsNativeType").get(0);
 
-            if(aclNativeType.equals(AclsNativeType.NATIVE.name())){
+            if(AclsNativeType.NATIVE.name().equals(aclNativeType)){
                 String aclType = aclRequest.get("aclType").get(0);
-                if (aclType.equals("Producer"))
+                if ("Producer".equals(aclType))
                      result = manageKafkaComponents.updateProducerAcl(aclRequest.get("topicName").get(0),
                             aclRequest.get("env").get(0), aclRequest.get("protocol").get(0), aclRequest.get("clusterName").get(0),
                             aclRequest.get("acl_ip").get(0), aclRequest.get("acl_ssl").get(0), "Create",
