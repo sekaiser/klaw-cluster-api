@@ -15,13 +15,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @PropertySource(value = {"classpath:application.properties"})
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-  @Value("${kafkawize.clusterapi.access.username}")
+  @Value("${klaw.clusterapi.access.username}")
   String user1_username;
 
-  @Value("${kafkawize.clusterapi.access.password}")
+  @Value("${klaw.clusterapi.access.password}")
   String user1_pwd;
 
-  @Value("${kafkawize.jasypt.encryptor.secretkey}")
+  @Value("${klaw.jasypt.encryptor.secretkey}")
   String encryptorSecretKey;
 
   @Autowired

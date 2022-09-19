@@ -19,10 +19,10 @@ public class TopicContentsService {
 
   final ClusterApiUtils clusterApiUtils;
 
-  @Value("${kafkawize.topiccontents.consumergroup.id:notdefined}")
+  @Value("${klaw.topiccontents.consumergroup.id:notdefined}")
   private String kwGenericConsumerGroupId;
 
-  @Value("${kafkawize.topiccontents.consumer.poll.interval.ms:2000}")
+  @Value("${klaw.topiccontents.consumer.poll.interval.ms:2000}")
   private long defaultPollInterval;
 
   public TopicContentsService(ClusterApiUtils clusterApiUtils) {
@@ -99,7 +99,7 @@ public class TopicContentsService {
     props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
     props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-    props.put(ConsumerConfig.CLIENT_ID_CONFIG, "KAFKAWIZE_TMP_GROUP_CLIENT" + groupId);
+    props.put(ConsumerConfig.CLIENT_ID_CONFIG, "KLAW_TMP_GROUP_CLIENT" + groupId);
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     return new KafkaConsumer<>(props);

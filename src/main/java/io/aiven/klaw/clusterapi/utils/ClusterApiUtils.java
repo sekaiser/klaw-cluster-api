@@ -31,13 +31,13 @@ public class ClusterApiUtils {
 
   final Environment env;
 
-  @Value("${kafkawize.request.timeout.ms:15000}")
+  @Value("${klaw.request.timeout.ms:15000}")
   private String requestTimeOutMs;
 
-  @Value("${kafkawize.retries.config:25}")
+  @Value("${klaw.retries.config:25}")
   private String retriesConfig;
 
-  @Value("${kafkawize.retry.backoff.ms:15000}")
+  @Value("${klaw.retry.backoff.ms:15000}")
   private String retryBackOffMsConfig;
 
   @Value("${klaw.aiven.kafkaconnect.credentials:credentials}")
@@ -164,7 +164,7 @@ public class ClusterApiUtils {
 
     props.put("bootstrap.servers", environment);
     props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-    props.put(AdminClientConfig.CLIENT_ID_CONFIG, "kafakwizeclientssl");
+    props.put(AdminClientConfig.CLIENT_ID_CONFIG, "klawclientssl");
     setOtherConfig(props);
 
     return props;
@@ -177,7 +177,7 @@ public class ClusterApiUtils {
 
     try {
       props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "kafakwizeclientsaslplain");
+      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "klawclientsaslplain");
       setOtherConfig(props);
 
       if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.plain"))) {
@@ -204,7 +204,7 @@ public class ClusterApiUtils {
     try {
       props.put("bootstrap.servers", environment);
       props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "kafakwizeclientsaslsslplain");
+      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "klawclientsaslsslplain");
       setOtherConfig(props);
 
       if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.plain"))) {
@@ -229,7 +229,7 @@ public class ClusterApiUtils {
     try {
       props.put("bootstrap.servers", environment);
       props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "kafakwizeclientsaslsslgssapi");
+      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "klawclientsaslsslgssapi");
       setOtherConfig(props);
 
       if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.gssapi"))) {
@@ -260,7 +260,7 @@ public class ClusterApiUtils {
 
   public Properties getSslConfig(String clusterName) {
     //        if(kwInstallationType.equals("saas"))
-    clusterName = "kafkawizessl";
+    clusterName = "klawssl";
 
     Properties props = new Properties();
 

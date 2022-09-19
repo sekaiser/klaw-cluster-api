@@ -21,7 +21,7 @@ For the versions available, see the [tags on this repository](https://github.com
 ## Install
 
 mvn clean install
-Follow steps at https://kafkawize.readthedocs.io/en/latest
+Follow steps at https://klaw-project.io/docs
 
 ## License
 

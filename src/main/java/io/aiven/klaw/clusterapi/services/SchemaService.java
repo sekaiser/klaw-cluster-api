@@ -21,7 +21,7 @@ public class SchemaService {
   public static final String SCHEMA_REGISTRY_CONTENT_TYPE =
       "application/vnd.schemaregistry.v1+json";
 
-  @Value("${kafkawize.schemaregistry.compatibility.default:BACKWARD}")
+  @Value("${klaw.schemaregistry.compatibility.default:BACKWARD}")
   private String defaultSchemaCompatibility;
 
   final ClusterApiUtils clusterApiUtils;
