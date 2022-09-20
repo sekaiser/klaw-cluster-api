@@ -1,8 +1,18 @@
+- Klaw ClusterApi (formerly Kafkawize ClusterApi) Release 1.0.0
+
+- This release is cloned from master branch of https://github.com/muralibasani/kafkawizeclusterapi
+- Package renamed to io.aiven.klaw.clusterapi
+- Changes to manage Aiven Acls
+- All occurences of Kafkawize renamed to Klaw
+- Few code enhancements
+
+----------------------------------------------------------------------
+
 5.0.1
 
 Acls accepting usernames (plain text principles) and CN strings
 
------------------------------------
+----------------------------------------------------------------------
 5.0.0 changes
 
 All changes of kafkawize pro

@@ -2,19 +2,42 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.kafkamgt.clusterapi</groupId>
-    <artifactId>kafkawizeclusterapipro</artifactId>
-    <version>5.0.1</version>
+    <groupId>io.aiven.klaw</groupId>
+    <artifactId>klaw-clusterapi</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
+    <name>Klaw ClusterApi</name>
+    <description>Aiven Klaw - ClusterApi</description>
+    <url>https://github.com/aiven/klaw-cluster-api</url>
 
-    <name>kafkaclusterapi</name>
-    <description>Kafkawize Cluster Api</description>
+    <organization>
+        <name>Aiven Oy</name>
+        <url>https://aiven.io</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Apache 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>aiven</id>
+            <name>Aiven Opensource</name>
+            <email>opensource@aiven.io</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com:aiven/klaw-cluster-api.git</connection>
+        <developerConnection>scm:git:ssh://github.com:aiven/klaw-cluster-api.git</developerConnection>
+        <url>https://github.com/aiven/klaw-cluster-api</url>
+    </scm>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.5</version>
+        <version>2.7.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -24,10 +47,12 @@
         <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <kafka.client.version>2.8.0</kafka.client.version>
+        <kafka.client.version>3.2.1</kafka.client.version>
         <maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
         <jasyptencrypt.version>3.0.4</jasyptencrypt.version>
+        <apachehttp.version>4.5.13</apachehttp.version>
+        <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
     </properties>
 
     <dependencies>
@@ -75,7 +100,7 @@
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>2.1.0</version>
+            <version>2.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -88,23 +113,19 @@
             <version>${jasyptencrypt.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-            <version>2.8.2</version>
-            <scope>test</scope>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${apache.commons.lang.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>2.0.9</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.0.1-jre</version>
+            <version>31.1-jre</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${apachehttp.version}</version>
         </dependency>
 
         <dependency>
@@ -113,6 +134,19 @@
             <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <version>2.9.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>2.0.9</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -156,20 +190,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <!--   <distributionManagement>
-        <repository>
-          <id>${deployement-repo-id}</id>
-          <uniqueVersion>false</uniqueVersion>
-          <name>Release deployement repository from user settings</name>
-          <url>${deployement-repo-url}</url>
-        </repository>
-        <snapshotRepository>
-          <id>${snapshot-deployement-repo-id}</id>
-          <name>Snapshots deployement repository from user settings</name>
-          <url>${snapshot-deployement-repo-url}</url>
-          <uniqueVersion>true</uniqueVersion>
-        </snapshotRepository>
-      </distributionManagement> -->
 
 </project>
