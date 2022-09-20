@@ -235,7 +235,7 @@ public class ClusterApiController {
     try {
       String aclNativeType = aclRequest.get("aclsNativeType").get(0);
 
-      if (aclNativeType.equals(AclsNativeType.NATIVE.name())) {
+      if (AclsNativeType.NATIVE.name().equals(aclNativeType)) {
         String aclType = aclRequest.get("aclType").get(0);
         if (aclType.equals("Producer"))
           result =

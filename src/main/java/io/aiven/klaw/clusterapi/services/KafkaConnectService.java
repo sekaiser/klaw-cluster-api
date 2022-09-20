@@ -22,10 +22,10 @@ public class KafkaConnectService {
     this.clusterApiUtils = clusterApiUtils;
   }
 
-  public HashMap<String, String> deleteConnector(
+  public Map<String, String> deleteConnector(
       String environmentVal, String protocol, String connectorName) {
     log.info("Into deleteConnector {} {} {}", environmentVal, connectorName, protocol);
-    HashMap<String, String> result = new HashMap<>();
+    Map<String, String> result = new HashMap<>();
 
     if (environmentVal == null) return null;
 
