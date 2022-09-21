@@ -124,16 +124,6 @@ public class AivenApiService {
           restTemplate.exchange(
               uri, HttpMethod.GET, request, new ParameterizedTypeReference<>() {});
 
-      /*
-      aclbindingMap.put("host", aclBinding.entry().host());
-      aclbindingMap.put("principle", aclBinding.entry().principal());
-      aclbindingMap.put("operation", aclBinding.entry().operation().toString());
-      aclbindingMap.put(
-          "permissionType", aclBinding.entry().permissionType().toString());
-      aclbindingMap.put("resourceType", aclBinding.pattern().resourceType().toString());
-      aclbindingMap.put("resourceName", aclBinding.pattern().name());
-       */
-
       List<Map<String, String>> aclsList = Objects.requireNonNull(responseEntity.getBody()).get("acl");
       List<Map<String, String>> aclsListUpdated = new ArrayList<>();
       for (Map<String, String> aclsMap : aclsList) {
