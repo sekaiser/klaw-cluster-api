@@ -114,8 +114,7 @@ public class ManageKafkaComponentsTest {
     when(accessControlEntry.operation()).thenReturn(AclOperation.READ);
     when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
 
-    Set<HashMap<String, String>> result =
-        manageKafkaComponents.loadAcls("localhost", "PLAINTEXT", "");
+    Set<Map<String, String>> result = manageKafkaComponents.loadAcls("localhost", "PLAINTEXT", "");
     assertEquals(1, result.size());
   }
 
@@ -133,8 +132,7 @@ public class ManageKafkaComponentsTest {
     when(accessControlEntry.operation()).thenReturn(AclOperation.CREATE);
     when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
 
-    Set<HashMap<String, String>> result =
-        manageKafkaComponents.loadAcls("localhost", "PLAINTEXT", "");
+    Set<Map<String, String>> result = manageKafkaComponents.loadAcls("localhost", "PLAINTEXT", "");
     assertEquals(0, result.size());
   }
 
@@ -144,8 +142,7 @@ public class ManageKafkaComponentsTest {
         .thenReturn(adminClient);
     when(adminClient.describeAcls(any())).thenThrow(new RuntimeException("Describe Acls Error"));
 
-    Set<HashMap<String, String>> result =
-        manageKafkaComponents.loadAcls("localhost", "PLAINTEXT", "");
+    Set<Map<String, String>> result = manageKafkaComponents.loadAcls("localhost", "PLAINTEXT", "");
     assertEquals(0, result.size());
   }
 
