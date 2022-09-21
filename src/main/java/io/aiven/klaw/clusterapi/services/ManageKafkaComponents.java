@@ -88,10 +88,10 @@ public class ManageKafkaComponents {
     }
   }
 
-  public synchronized Set<HashMap<String, String>> loadAcls(
+  public synchronized Set<Map<String, String>> loadAcls(
       String environment, String protocol, String clusterName) throws Exception {
     log.info("loadAcls {} {}", environment, protocol);
-    Set<HashMap<String, String>> acls = new HashSet<>();
+    Set<Map<String, String>> acls = new HashSet<>();
 
     AdminClient client = getAdminClient.getAdminClient(environment, protocol, clusterName);
     if (client == null) throw new Exception("Cannot connect to cluster.");
@@ -106,7 +106,7 @@ public class ManageKafkaComponents {
           .forEach(
               aclBinding -> {
                 if (aclBinding.pattern().patternType().name().equals("LITERAL")) {
-                  HashMap<String, String> aclbindingMap = new HashMap<>();
+                  Map<String, String> aclbindingMap = new HashMap<>();
                   aclbindingMap.put("host", aclBinding.entry().host());
                   aclbindingMap.put("principle", aclBinding.entry().principal());
                   aclbindingMap.put("operation", aclBinding.entry().operation().toString());

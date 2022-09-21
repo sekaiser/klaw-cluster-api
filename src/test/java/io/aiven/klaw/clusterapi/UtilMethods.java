@@ -21,9 +21,9 @@ public class UtilMethods {
     return listAclBinding;
   }
 
-  public Set<HashMap<String, String>> getAcls() {
-    Set<HashMap<String, String>> aclsSet = new HashSet<>();
-    HashMap<String, String> hMap = new HashMap<>();
+  public Set<Map<String, String>> getAcls() {
+    Set<Map<String, String>> aclsSet = new HashSet<>();
+    Map<String, String> hMap = new HashMap<>();
     hMap.put("host", "12.11.124.11");
     hMap.put("principle", "User:*");
     hMap.put("operation", "READ");

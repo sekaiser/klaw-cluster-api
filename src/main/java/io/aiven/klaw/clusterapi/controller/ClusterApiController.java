@@ -71,16 +71,22 @@ public class ClusterApiController {
   }
 
   @RequestMapping(
-      value = "/getAcls/{bootstrapServers}/{protocol}/{clusterName}",
+      value = "/getAcls/{bootstrapServers}/{aclsNativeType}/{protocol}/{clusterName}/{projectName}/{serviceName}",
       method = RequestMethod.GET,
       produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<Set<HashMap<String, String>>> getAcls(
+  public ResponseEntity<Set<Map<String, String>>> getAcls(
       @PathVariable String bootstrapServers,
       @PathVariable String protocol,
-      @PathVariable String clusterName)
+      @PathVariable String clusterName,
+      @PathVariable String aclsNativeType,
+      @PathVariable String projectName,
+      @PathVariable String serviceName)
       throws Exception {
-    Set<HashMap<String, String>> acls =
-        manageKafkaComponents.loadAcls(bootstrapServers, protocol, clusterName);
+    Set<Map<String, String>> acls;
+    if(AclsNativeType.NATIVE.name().equals(aclsNativeType))
+      acls = manageKafkaComponents.loadAcls(bootstrapServers, protocol, clusterName);
+    else
+      acls = aivenApiService.listAcls(projectName, serviceName);
 
     return new ResponseEntity<>(acls, HttpStatus.OK);
   }

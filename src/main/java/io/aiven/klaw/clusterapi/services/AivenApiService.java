@@ -107,9 +107,11 @@ public class AivenApiService {
     return ResultType.SUCCESS.value;
   }
 
-  List<LinkedHashMap<String, String>> listAcls(String projectName, String serviceName)
+  public Set<Map<String, String>> listAcls(String projectName, String serviceName)
       throws Exception {
     RestTemplate restTemplate = getRestTemplate();
+    log.info("listAcls {} {}", projectName, serviceName);
+    Set<Map<String, String>> acls = new HashSet<>();
 
     String uri =
         listAclsApiEndpoint.replace("projectName", projectName).replace("serviceName", serviceName);
@@ -118,11 +120,54 @@ public class AivenApiService {
     HttpEntity<Map<String, String>> request = new HttpEntity<>(headers);
 
     try {
-      ResponseEntity<LinkedHashMap<String, List<LinkedHashMap<String, String>>>> responseEntity =
+      ResponseEntity<Map<String, List<Map<String, String>>>> responseEntity =
           restTemplate.exchange(
               uri, HttpMethod.GET, request, new ParameterizedTypeReference<>() {});
 
-      return Objects.requireNonNull(responseEntity.getBody()).get("acl");
+      /*
+      aclbindingMap.put("host", aclBinding.entry().host());
+      aclbindingMap.put("principle", aclBinding.entry().principal());
+      aclbindingMap.put("operation", aclBinding.entry().operation().toString());
+      aclbindingMap.put(
+          "permissionType", aclBinding.entry().permissionType().toString());
+      aclbindingMap.put("resourceType", aclBinding.pattern().resourceType().toString());
+      aclbindingMap.put("resourceName", aclBinding.pattern().name());
+       */
+
+      List<Map<String, String>> aclsList = Objects.requireNonNull(responseEntity.getBody()).get("acl");
+      List<Map<String, String>> aclsListUpdated = new ArrayList<>();
+      for (Map<String, String> aclsMap : aclsList) {
+        Map<String, String> aclsMapUpdated = new HashMap<>();
+        for (String keyAcls : aclsMap.keySet()) {
+          switch (keyAcls) {
+            case "id":
+              aclsMapUpdated.put("aivenaclid", aclsMap.get(keyAcls));
+              break;
+            case "permission":
+              aclsMapUpdated.put("operation", aclsMap.get(keyAcls).toUpperCase());
+              aclsMapUpdated.put("resourceType","TOPIC");
+              break;
+            case "topic":
+              aclsMapUpdated.put("resourceName", aclsMap.get(keyAcls));
+              break;
+            case "username":
+              aclsMapUpdated.put("principle", "User:"+aclsMap.get(keyAcls));
+              break;
+          }
+        }
+        aclsMapUpdated.put("host","*");
+        aclsMapUpdated.put("permissionType","ALLOW");
+        if("READ".equals(aclsMapUpdated.get("operation"))){
+          Map<String, String> newRGroupMap = new HashMap<>(aclsMapUpdated);
+          newRGroupMap.put("resourceType", "GROUP");
+          newRGroupMap.put("resourceName", "-na-");
+          aclsListUpdated.add(newRGroupMap);
+        }
+        if(!"ADMIN".equals(aclsMapUpdated.get("operation")))
+          aclsListUpdated.add(aclsMapUpdated);
+      }
+
+      return new HashSet<>(aclsListUpdated);
     } catch (RestClientException e) {
       log.error(e.toString());
       throw new Exception("Error in listing acls : " + e.getMessage());
