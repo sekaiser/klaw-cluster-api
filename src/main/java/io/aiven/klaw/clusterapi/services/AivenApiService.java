@@ -124,7 +124,8 @@ public class AivenApiService {
           restTemplate.exchange(
               uri, HttpMethod.GET, request, new ParameterizedTypeReference<>() {});
 
-      List<Map<String, String>> aclsList = Objects.requireNonNull(responseEntity.getBody()).get("acl");
+      List<Map<String, String>> aclsList =
+          Objects.requireNonNull(responseEntity.getBody()).get("acl");
       List<Map<String, String>> aclsListUpdated = new ArrayList<>();
       for (Map<String, String> aclsMap : aclsList) {
         Map<String, String> aclsMapUpdated = new HashMap<>();
@@ -135,26 +136,25 @@ public class AivenApiService {
               break;
             case "permission":
               aclsMapUpdated.put("operation", aclsMap.get(keyAcls).toUpperCase());
-              aclsMapUpdated.put("resourceType","TOPIC");
+              aclsMapUpdated.put("resourceType", "TOPIC");
               break;
             case "topic":
               aclsMapUpdated.put("resourceName", aclsMap.get(keyAcls));
               break;
             case "username":
-              aclsMapUpdated.put("principle", "User:"+aclsMap.get(keyAcls));
+              aclsMapUpdated.put("principle", aclsMap.get(keyAcls));
               break;
           }
         }
-        aclsMapUpdated.put("host","*");
-        aclsMapUpdated.put("permissionType","ALLOW");
-        if("READ".equals(aclsMapUpdated.get("operation"))){
+        aclsMapUpdated.put("host", "*");
+        aclsMapUpdated.put("permissionType", "ALLOW");
+        if ("READ".equals(aclsMapUpdated.get("operation"))) {
           Map<String, String> newRGroupMap = new HashMap<>(aclsMapUpdated);
           newRGroupMap.put("resourceType", "GROUP");
           newRGroupMap.put("resourceName", "-na-");
           aclsListUpdated.add(newRGroupMap);
         }
-        if(!"ADMIN".equals(aclsMapUpdated.get("operation")))
-          aclsListUpdated.add(aclsMapUpdated);
+        if (!"ADMIN".equals(aclsMapUpdated.get("operation"))) aclsListUpdated.add(aclsMapUpdated);
       }
 
       return new HashSet<>(aclsListUpdated);

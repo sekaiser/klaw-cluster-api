@@ -53,6 +53,15 @@
         <jasyptencrypt.version>3.0.4</jasyptencrypt.version>
         <apachehttp.version>4.5.13</apachehttp.version>
         <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
+        <google-java-format.version>1.15.0</google-java-format.version>
+        <spotless-maven-plugin.version>2.23.0</spotless-maven-plugin.version>
+        <powermock-module-junit4.version>2.0.9</powermock-module-junit4.version>
+        <spring-kafka-test.version>2.9.0</spring-kafka-test.version>
+        <powermock-api-mockito2.version>2.0.9</powermock-api-mockito2.version>
+        <guava.version>31.1-jre</guava.version>
+        <swagger-annotations.version>2.2.2</swagger-annotations.version>
+        <springfox-swagger-ui.version>3.0.0</springfox-swagger-ui.version>
+        <springfox-swagger2.version>3.0.0</springfox-swagger2.version>
     </properties>
 
     <dependencies>
@@ -90,17 +99,17 @@
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
-            <version>3.0.0</version>
+            <version>${springfox-swagger2.version}</version>
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
-            <version>3.0.0</version>
+            <version>${springfox-swagger-ui.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>2.2.2</version>
+            <version>${swagger-annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -120,7 +129,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
+            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -131,19 +140,19 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito2</artifactId>
-            <version>2.0.9</version>
+            <version>${powermock-api-mockito2.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
-            <version>2.9.0</version>
+            <version>${spring-kafka-test.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>2.0.9</version>
+            <version>${powermock-module-junit4.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -154,7 +163,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.3.3.RELEASE</version>
                 <configuration>
                     <layers>
                         <enabled>true</enabled>
@@ -165,6 +173,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <useManifestOnlyJar>false</useManifestOnlyJar>
+                    <systemPropertyVariables>
+                        <!-- Run tests in Turkish to make sure that they don't depend on
+                             locale. Turkish is a notoriously tricky locale. -->
+                        <user.language>TR</user.language>
+                        <user.country>tr</user.country>
+                    </systemPropertyVariables>
+                    <testFailureIgnore>false</testFailureIgnore>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -187,6 +205,29 @@
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>3.7.0.1746</version>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless-maven-plugin.version}</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>${google-java-format.version}</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                        <removeUnusedImports/>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
