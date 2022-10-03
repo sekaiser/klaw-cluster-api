@@ -1,11 +1,17 @@
 package io.aiven.klaw.clusterapi.controller;
 
 import io.aiven.klaw.clusterapi.models.AclsNativeType;
+import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.services.AivenApiService;
-import io.aiven.klaw.clusterapi.services.ManageKafkaComponents;
+import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
+import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
 import io.aiven.klaw.clusterapi.services.MonitoringService;
 import io.aiven.klaw.clusterapi.services.SchemaService;
+import io.aiven.klaw.clusterapi.services.UtilComponentsService;
 import java.util.*;
+import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -17,7 +23,11 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class ClusterApiController {
 
-  @Autowired ManageKafkaComponents manageKafkaComponents;
+  @Autowired UtilComponentsService utilComponentsService;
+
+  @Autowired ApacheKafkaAclService apacheKafkaAclService;
+
+  @Autowired ApacheKafkaTopicService apacheKafkaTopicService;
 
   @Autowired SchemaService schemaService;
 
@@ -51,7 +61,7 @@ public class ClusterApiController {
       @PathVariable String clusterName,
       @PathVariable String clusterType) {
     String envStatus =
-        manageKafkaComponents.getStatus(bootstrapServers, protocol, clusterName, clusterType);
+        utilComponentsService.getStatus(bootstrapServers, protocol, clusterName, clusterType);
 
     return new ResponseEntity<>(envStatus, HttpStatus.OK);
   }
@@ -66,7 +76,7 @@ public class ClusterApiController {
       @PathVariable String clusterName)
       throws Exception {
     Set<HashMap<String, String>> topics =
-        manageKafkaComponents.loadTopics(bootstrapServers, protocol, clusterName);
+        apacheKafkaTopicService.loadTopics(bootstrapServers, protocol, clusterName);
     return new ResponseEntity<>(topics, HttpStatus.OK);
   }
 
@@ -85,7 +95,7 @@ public class ClusterApiController {
       throws Exception {
     Set<Map<String, String>> acls;
     if (AclsNativeType.NATIVE.name().equals(aclsNativeType))
-      acls = manageKafkaComponents.loadAcls(bootstrapServers, protocol, clusterName);
+      acls = apacheKafkaAclService.loadAcls(bootstrapServers, protocol, clusterName);
     else acls = aivenApiService.listAcls(projectName, serviceName);
 
     return new ResponseEntity<>(acls, HttpStatus.OK);
@@ -127,15 +137,10 @@ public class ClusterApiController {
 
   @PostMapping(value = "/createTopics")
   public ResponseEntity<String> createTopics(
-      @RequestBody MultiValueMap<String, String> topicRequest) {
+      @RequestBody @Valid ClusterTopicRequest clusterTopicRequest) {
     try {
-      manageKafkaComponents.createTopic(
-          topicRequest.get("topicName").get(0),
-          topicRequest.get("partitions").get(0),
-          topicRequest.get("rf").get(0),
-          topicRequest.get("env").get(0),
-          topicRequest.get("protocol").get(0),
-          topicRequest.get("clusterName").get(0));
+      log.info("createTopics clusterTopicRequest {}", clusterTopicRequest);
+      apacheKafkaTopicService.createTopic(clusterTopicRequest);
     } catch (Exception e) {
       log.error(e.getMessage());
       return new ResponseEntity<>("failure " + e, HttpStatus.OK);
@@ -148,7 +153,7 @@ public class ClusterApiController {
   public ResponseEntity<String> updateTopics(
       @RequestBody MultiValueMap<String, String> topicRequest) {
     try {
-      manageKafkaComponents.updateTopic(
+      apacheKafkaTopicService.updateTopic(
           topicRequest.get("topicName").get(0),
           topicRequest.get("partitions").get(0),
           topicRequest.get("rf").get(0),
@@ -167,7 +172,7 @@ public class ClusterApiController {
   public ResponseEntity<String> deleteTopics(
       @RequestBody MultiValueMap<String, String> topicRequest) {
     try {
-      manageKafkaComponents.deleteTopic(
+      apacheKafkaTopicService.deleteTopic(
           topicRequest.get("topicName").get(0),
           topicRequest.get("env").get(0),
           topicRequest.get("protocol").get(0),
@@ -181,110 +186,62 @@ public class ClusterApiController {
   }
 
   @PostMapping(value = "/createAcls")
-  public ResponseEntity<Map<String, String>> createAcls(
-      @RequestBody MultiValueMap<String, String> aclRequest) {
+  public ResponseEntity<ApiResponse> createAcls(
+      @RequestBody @Valid ClusterAclRequest clusterAclRequest) {
 
     Map<String, String> resultMap = new HashMap<>();
     String result;
     try {
-      String aclNativeType = aclRequest.get("aclsNativeType").get(0);
-
-      if (AclsNativeType.NATIVE.name().equals(aclNativeType)) {
-        String aclType = aclRequest.get("aclType").get(0);
-        if ("Producer".equals(aclType))
-          result =
-              manageKafkaComponents.updateProducerAcl(
-                  aclRequest.get("topicName").get(0),
-                  aclRequest.get("env").get(0),
-                  aclRequest.get("protocol").get(0),
-                  aclRequest.get("clusterName").get(0),
-                  aclRequest.get("acl_ip").get(0),
-                  aclRequest.get("acl_ssl").get(0),
-                  "Create",
-                  aclRequest.get("isPrefixAcl").get(0),
-                  aclRequest.get("transactionalId").get(0),
-                  aclRequest.get("aclIpPrincipleType").get(0),
-                  aclRequest.get("aclsNativeType").get(0));
-        else
-          result =
-              manageKafkaComponents.updateConsumerAcl(
-                  aclRequest.get("topicName").get(0),
-                  aclRequest.get("env").get(0),
-                  aclRequest.get("protocol").get(0),
-                  aclRequest.get("clusterName").get(0),
-                  aclRequest.get("acl_ip").get(0),
-                  aclRequest.get("acl_ssl").get(0),
-                  aclRequest.get("consumerGroup").get(0),
-                  "Create",
-                  aclRequest.get("isPrefixAcl").get(0),
-                  aclRequest.get("aclIpPrincipleType").get(0),
-                  aclRequest.get("aclsNativeType").get(0));
-        resultMap.put("result", result);
-        return new ResponseEntity<>(resultMap, HttpStatus.OK);
-      } else if (AclsNativeType.AIVEN.name().equals(aclNativeType)) {
-        resultMap = aivenApiService.createAcls(aclRequest);
-        return new ResponseEntity<>(resultMap, HttpStatus.OK);
+      if (AclsNativeType.NATIVE.name().equals(clusterAclRequest.getAclNativeType())) {
+        if ("Producer".equals(clusterAclRequest.getAclType()))
+          result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
+        else result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        return new ResponseEntity<>(ApiResponse.builder().result(result).build(), HttpStatus.OK);
+      } else if (AclsNativeType.AIVEN.name().equals(clusterAclRequest.getAclNativeType())) {
+        resultMap = aivenApiService.createAcls(clusterAclRequest);
+        return new ResponseEntity<>(
+            ApiResponse.builder().result(resultMap.get("result")).data(resultMap).build(),
+            HttpStatus.OK);
       }
     } catch (Exception e) {
       resultMap.put("result", "failure " + e.getMessage());
-      return new ResponseEntity<>(resultMap, HttpStatus.OK);
+      return new ResponseEntity<>(
+          ApiResponse.builder().result("failure " + e.getMessage()).build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
     }
     resultMap.put("result", "Not a valid request");
-    return new ResponseEntity<>(resultMap, HttpStatus.NOT_FOUND);
+    return new ResponseEntity<>(
+        ApiResponse.builder().result("Not a valid request").build(),
+        HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @PostMapping(value = "/deleteAcls")
-  public ResponseEntity<Map<String, String>> deleteAcls(
-      @RequestBody MultiValueMap<String, String> aclRequest) {
-    Map<String, String> resultMap = new HashMap<>();
+  public ResponseEntity<ApiResponse> deleteAcls(
+      @RequestBody @Valid ClusterAclRequest clusterAclRequest) {
     String result;
     try {
-      String aclNativeType = aclRequest.get("aclsNativeType").get(0);
+      if (AclsNativeType.NATIVE.name().equals(clusterAclRequest.getAclNativeType())) {
 
-      if (AclsNativeType.NATIVE.name().equals(aclNativeType)) {
-        String aclType = aclRequest.get("aclType").get(0);
-        if (aclType.equals("Producer"))
-          result =
-              manageKafkaComponents.updateProducerAcl(
-                  aclRequest.get("topicName").get(0),
-                  aclRequest.get("env").get(0),
-                  aclRequest.get("protocol").get(0),
-                  aclRequest.get("clusterName").get(0),
-                  aclRequest.get("acl_ip").get(0),
-                  aclRequest.get("acl_ssl").get(0),
-                  "Delete",
-                  aclRequest.get("isPrefixAcl").get(0),
-                  aclRequest.get("transactionalId").get(0),
-                  aclRequest.get("aclIpPrincipleType").get(0),
-                  aclRequest.get("aclsNativeType").get(0));
-        else
-          result =
-              manageKafkaComponents.updateConsumerAcl(
-                  aclRequest.get("topicName").get(0),
-                  aclRequest.get("env").get(0),
-                  aclRequest.get("protocol").get(0),
-                  aclRequest.get("clusterName").get(0),
-                  aclRequest.get("acl_ip").get(0),
-                  aclRequest.get("acl_ssl").get(0),
-                  aclRequest.get("consumerGroup").get(0),
-                  "Delete",
-                  aclRequest.get("isPrefixAcl").get(0),
-                  aclRequest.get("aclIpPrincipleType").get(0),
-                  aclRequest.get("aclsNativeType").get(0));
-        resultMap.put("result", result);
-        return new ResponseEntity<>(resultMap, HttpStatus.OK);
-      } else if (AclsNativeType.AIVEN.name().equals(aclNativeType)) {
-        result = aivenApiService.deleteAcls(aclRequest);
-        resultMap.put("result", result);
-        return new ResponseEntity<>(resultMap, HttpStatus.OK);
+        if ("Producer".equals(clusterAclRequest.getAclType()))
+          result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
+        else result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+
+        return new ResponseEntity<>(ApiResponse.builder().result(result).build(), HttpStatus.OK);
+      } else if (AclsNativeType.AIVEN.name().equals(clusterAclRequest.getAclNativeType())) {
+        result = aivenApiService.deleteAcls(clusterAclRequest);
+
+        return new ResponseEntity<>(ApiResponse.builder().result(result).build(), HttpStatus.OK);
       }
 
     } catch (Exception e) {
-      resultMap.put("result", "failure " + e.getMessage());
-      return new ResponseEntity<>(resultMap, HttpStatus.OK);
+      log.error(e.getMessage());
+      return new ResponseEntity<>(
+          ApiResponse.builder().result("failure in deleting acls").build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    resultMap.put("result", "Not a valid request");
-    return new ResponseEntity<>(resultMap, HttpStatus.NOT_FOUND);
+    return new ResponseEntity<>(
+        ApiResponse.builder().result("Not a valid request").build(),
+        HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @PostMapping(value = "/postSchema")

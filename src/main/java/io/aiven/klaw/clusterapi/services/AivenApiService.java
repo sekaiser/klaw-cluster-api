@@ -3,6 +3,7 @@ package io.aiven.klaw.clusterapi.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.klaw.clusterapi.models.AivenAclResponse;
 import io.aiven.klaw.clusterapi.models.AivenAclStruct;
+import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ResultType;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,21 +30,16 @@ public class AivenApiService {
   @Value("${klaw.clusters.deleteacls.api:api}")
   private String deleteAclsApiEndpoint;
 
-  public Map<String, String> createAcls(MultiValueMap<String, String> permissionsMultiMap)
-      throws Exception {
+  public Map<String, String> createAcls(ClusterAclRequest clusterAclRequest) {
     Map<String, String> resultMap = new HashMap<>();
     RestTemplate restTemplate = getRestTemplate();
-    String projectName = permissionsMultiMap.get("projectName").get(0);
-    String serviceName = permissionsMultiMap.get("serviceName").get(0);
+    String projectName = clusterAclRequest.getProjectName();
+    String serviceName = clusterAclRequest.getServiceName();
 
-    Set<String> keys = permissionsMultiMap.keySet();
     LinkedHashMap<String, String> permissionsMap = new LinkedHashMap<>();
-    List<String> allowedKeyList = new ArrayList<>(Arrays.asList("permission", "topic", "username"));
-    for (String key : keys) {
-      if (allowedKeyList.contains(key)) {
-        permissionsMap.put(key, permissionsMultiMap.get(key).get(0));
-      }
-    }
+    permissionsMap.put("topic", clusterAclRequest.getTopicName());
+    permissionsMap.put("permission", clusterAclRequest.getPermission());
+    permissionsMap.put("username", clusterAclRequest.getUsername());
 
     String uri =
         addAclsApiEndpoint.replace("projectName", projectName).replace("serviceName", serviceName);
@@ -60,10 +55,9 @@ public class AivenApiService {
           Arrays.stream(aivenAclResponse.getAcl())
               .filter(
                   acl ->
-                      acl.getUsername().equals(permissionsMultiMap.get("username").get(0))
-                          && acl.getTopic().equals(permissionsMultiMap.get("topic").get(0))
-                          && acl.getPermission()
-                              .equals(permissionsMultiMap.get("permission").get(0)))
+                      acl.getUsername().equals(clusterAclRequest.getUsername())
+                          && acl.getTopic().equals(clusterAclRequest.getTopicName())
+                          && acl.getPermission().equals(clusterAclRequest.getPermission()))
               .findFirst();
       aivenAclStructOptional.ifPresent(
           aivenAclStruct -> resultMap.put("aivenaclid", aivenAclStruct.getId()));
@@ -82,13 +76,13 @@ public class AivenApiService {
     }
   }
 
-  public String deleteAcls(MultiValueMap<String, String> permissionsMultiMap) throws Exception {
+  public String deleteAcls(ClusterAclRequest clusterAclRequest) throws Exception {
     RestTemplate restTemplate = getRestTemplate();
 
     try {
-      String projectName = permissionsMultiMap.get("projectName").get(0);
-      String serviceName = permissionsMultiMap.get("serviceName").get(0);
-      String aclId = permissionsMultiMap.get("aivenaclid").get(0);
+      String projectName = clusterAclRequest.getProjectName();
+      String serviceName = clusterAclRequest.getServiceName();
+      String aclId = clusterAclRequest.getAivenAclKey();
 
       String uri =
           deleteAclsApiEndpoint

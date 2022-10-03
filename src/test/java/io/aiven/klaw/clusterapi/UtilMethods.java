@@ -1,5 +1,10 @@
 package io.aiven.klaw.clusterapi;
 
+import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
+import io.aiven.klaw.clusterapi.models.AclOperationType;
+import io.aiven.klaw.clusterapi.models.AclsNativeType;
+import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import java.util.*;
 import org.apache.kafka.common.acl.AccessControlEntry;
 import org.apache.kafka.common.acl.AclBinding;
@@ -67,6 +72,16 @@ public class UtilMethods {
     return params;
   }
 
+  public ClusterTopicRequest getTopicRequest() {
+    return ClusterTopicRequest.builder()
+        .env("localhost")
+        .protocol("PLAINTEXT")
+        .topicName("testtopic")
+        .partitions(2)
+        .replicationFactor(Short.parseShort("1"))
+        .build();
+  }
+
   public MultiValueMap<String, String> getMappedValuesAcls(String aclType) {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("env", "localhost");
@@ -88,5 +103,20 @@ public class UtilMethods {
     params.add("fullSchema", "{type:string}");
 
     return params;
+  }
+
+  public ClusterAclRequest getAclRequest(String aclType) {
+    return ClusterAclRequest.builder()
+        .env("localhost")
+        .topicName("testtopic")
+        .protocol("PLAINTEXT")
+        .consumerGroup("congroup1")
+        .aclType(aclType)
+        .aclIp("11.12.33.122")
+        .aclSsl(null)
+        .aclOperationType(AclOperationType.CREATE)
+        .aclNativeType(AclsNativeType.NATIVE.name())
+        .aclIpPrincipleType(AclIPPrincipleType.PRINCIPAL.name())
+        .build();
   }
 }
