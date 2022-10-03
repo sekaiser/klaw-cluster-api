@@ -3,6 +3,7 @@ package io.aiven.klaw.clusterapi.controller;
 import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.services.AivenApiService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
@@ -245,18 +246,15 @@ public class ClusterApiController {
   }
 
   @PostMapping(value = "/postSchema")
-  public ResponseEntity<String> postSchema(
-      @RequestBody MultiValueMap<String, String> fullSchemaDetails) {
+  public ResponseEntity<ApiResponse> postSchema(
+      @RequestBody @Valid ClusterSchemaRequest clusterSchemaRequest) {
     try {
-      String topicName = fullSchemaDetails.get("topicName").get(0);
-      String schemaFull = fullSchemaDetails.get("fullSchema").get(0);
-      String env = fullSchemaDetails.get("env").get(0);
-      String protocol = fullSchemaDetails.get("protocol").get(0);
-
-      String result = schemaService.registerSchema(topicName, schemaFull, env, protocol);
-      return new ResponseEntity<>("Status:" + result, HttpStatus.OK);
+      return new ResponseEntity<>(
+          schemaService.registerSchema(clusterSchemaRequest), HttpStatus.OK);
     } catch (Exception e) {
-      return new ResponseEntity<>("failure " + e.getMessage(), HttpStatus.OK);
+      log.error(e.getMessage());
+      return new ResponseEntity<>(
+          ApiResponse.builder().result(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

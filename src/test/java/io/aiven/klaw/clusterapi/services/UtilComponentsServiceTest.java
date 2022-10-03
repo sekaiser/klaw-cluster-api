@@ -7,7 +7,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.aiven.klaw.clusterapi.UtilMethods;
+import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
@@ -309,23 +311,24 @@ public class UtilComponentsServiceTest {
 
   @Test
   public void postSchema1() {
-    String topicName = "testtopic1", schema = "{type:string}", environmentVal = "localhost";
-    ResponseEntity<String> response =
-        new ResponseEntity<>("Schema created id : 101", HttpStatus.OK);
+    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+    ApiResponse apiResponse = ApiResponse.builder().result("Schema created id : 101").build();
+    ResponseEntity<ApiResponse> response = new ResponseEntity<>(apiResponse, HttpStatus.OK);
 
     when(getAdminClient.getRestTemplate()).thenReturn(restTemplate);
-    when(restTemplate.postForEntity(anyString(), any(), eq(String.class))).thenReturn(response);
+    when(restTemplate.postForEntity(anyString(), any(), eq(ApiResponse.class)))
+        .thenReturn(response);
 
-    String result = schemaService.registerSchema(topicName, schema, environmentVal, "PLAINTEXT");
-    assertEquals("Schema created id : 101", result);
+    ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
+    assertEquals("Schema created id : 101", resultResp.getResult());
   }
 
   @Test
   public void postSchema2() {
-    String topicName = "testtopic1", schema = "{type:string}", environmentVal = null;
+    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
 
-    String result = schemaService.registerSchema(topicName, schema, environmentVal, "PLAINTEXT");
-    assertEquals("Cannot retrieve SchemaRegistry Url", result);
+    ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
+    assertEquals("Cannot retrieve SchemaRegistry Url", resultResp.getResult());
   }
 
   private Map<String, TopicDescription> getTopicDescs() {

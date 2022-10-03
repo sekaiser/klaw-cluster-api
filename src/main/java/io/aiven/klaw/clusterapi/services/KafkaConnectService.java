@@ -1,5 +1,7 @@
 package io.aiven.klaw.clusterapi.services;
 
+import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ClusterConnectorRequest;
 import io.aiven.klaw.clusterapi.models.ClusterResponseStatus;
 import io.aiven.klaw.clusterapi.models.KafkaClustersType;
 import io.aiven.klaw.clusterapi.models.ResultType;
@@ -79,36 +81,33 @@ public class KafkaConnectService {
     return result;
   }
 
-  public Map<String, String> postNewConnector(
-      String environmentVal, String protocol, String connectorConfig) {
-    log.info("Into postNewConnector {} {} {}", environmentVal, connectorConfig, protocol);
-    Map<String, String> result = new HashMap<>();
-    if (environmentVal == null) return null;
+  public ApiResponse postNewConnector(ClusterConnectorRequest clusterConnectorRequest)
+      throws Exception {
+    log.info("Into postNewConnector clusterConnectorRequest {} ", clusterConnectorRequest);
 
-    String suffixUrl = environmentVal + "/connectors";
+    String suffixUrl = clusterConnectorRequest.getEnv() + "/connectors";
     Pair<String, RestTemplate> reqDetails =
-        clusterApiUtils.getRequestDetails(suffixUrl, protocol, KafkaClustersType.KAFKA_CONNECT);
+        clusterApiUtils.getRequestDetails(
+            suffixUrl, clusterConnectorRequest.getProtocol(), KafkaClustersType.KAFKA_CONNECT);
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Content-Type", "application/json");
 
-    HttpEntity<String> request = new HttpEntity<>(connectorConfig, headers);
+    HttpEntity<String> request =
+        new HttpEntity<>(clusterConnectorRequest.getConnectorConfig(), headers);
     ResponseEntity<String> responseNew;
     try {
       responseNew =
           reqDetails.getRight().postForEntity(reqDetails.getLeft(), request, String.class);
     } catch (RestClientException e) {
       log.error("Error in registering new connector " + e.toString());
-      result.put("result", ResultType.ERROR.value);
-      result.put("errorText", e.toString().replaceAll("\"", ""));
-      return result;
+      throw new Exception(e.toString());
     }
     if (responseNew.getStatusCodeValue() == 201) {
-      result.put("result", ResultType.SUCCESS.value);
+      return ApiResponse.builder().result(ResultType.SUCCESS.value).build();
     } else {
-      result.put("result", ResultType.FAILURE.value);
+      return ApiResponse.builder().result(ResultType.FAILURE.value).build();
     }
-    return result;
   }
 
   public List<String> getConnectors(String environmentVal, String protocol) {

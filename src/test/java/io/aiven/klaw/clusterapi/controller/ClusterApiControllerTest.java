@@ -2,13 +2,14 @@ package io.aiven.klaw.clusterapi.controller;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.klaw.clusterapi.UtilMethods;
+import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
@@ -27,7 +28,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.MultiValueMap;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ClusterApiControllerTest {
@@ -267,11 +267,12 @@ public class ClusterApiControllerTest {
 
   @Test
   public void postSchema() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesSchema();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterSchemaRequest);
 
-    when(schemaService.registerSchema(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn("success");
+    ApiResponse apiResponse = ApiResponse.builder().result("failure").build();
+
+    when(schemaService.registerSchema(clusterSchemaRequest)).thenReturn(apiResponse);
 
     String response =
         mvc.perform(
@@ -283,16 +284,15 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    // assertEquals("Status:success", response);
     assertThat(response, CoreMatchers.containsString("failure"));
   }
 
   @Test
   public void postSchemaFail() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesSchema();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterSchemaRequest);
 
-    when(schemaService.registerSchema(anyString(), anyString(), anyString(), anyString()))
+    when(schemaService.registerSchema(clusterSchemaRequest))
         .thenThrow(new RuntimeException("Error registering schema"));
 
     String response =

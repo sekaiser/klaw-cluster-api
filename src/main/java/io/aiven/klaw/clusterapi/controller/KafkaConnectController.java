@@ -1,7 +1,10 @@
 package io.aiven.klaw.clusterapi.controller;
 
+import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ClusterConnectorRequest;
 import io.aiven.klaw.clusterapi.services.KafkaConnectService;
 import java.util.*;
+import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,15 +44,16 @@ public class KafkaConnectController {
   }
 
   @PostMapping(value = "/postConnector")
-  public ResponseEntity<Map<String, String>> postConnector(
-      @RequestBody MultiValueMap<String, String> fullConnectorConfig) {
-    String env = fullConnectorConfig.get("env").get(0);
-    String protocol = fullConnectorConfig.get("protocol").get(0);
-    String connectorConfig = fullConnectorConfig.get("connectorConfig").get(0);
-
-    Map<String, String> result =
-        kafkaConnectService.postNewConnector(env, protocol, connectorConfig);
-    return new ResponseEntity<>(result, HttpStatus.OK);
+  public ResponseEntity<ApiResponse> postConnector(
+      @RequestBody @Valid ClusterConnectorRequest clusterConnectorRequest) {
+    try {
+      ApiResponse result = kafkaConnectService.postNewConnector(clusterConnectorRequest);
+      return new ResponseEntity<>(result, HttpStatus.OK);
+    } catch (Exception e) {
+      return new ResponseEntity<>(
+          ApiResponse.builder().result("Unable to register connector").build(),
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @PostMapping(value = "/updateConnector")

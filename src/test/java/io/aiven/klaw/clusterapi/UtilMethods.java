@@ -4,6 +4,7 @@ import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
 import io.aiven.klaw.clusterapi.models.AclOperationType;
 import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import java.util.*;
 import org.apache.kafka.common.acl.AccessControlEntry;
@@ -103,6 +104,15 @@ public class UtilMethods {
     params.add("fullSchema", "{type:string}");
 
     return params;
+  }
+
+  public ClusterSchemaRequest getSchema() {
+    return ClusterSchemaRequest.builder()
+        .env("localhost")
+        .fullSchema("{type:string}")
+        .protocol("PLAINTEXT")
+        .topicName("testtopic")
+        .build();
   }
 
   public ClusterAclRequest getAclRequest(String aclType) {
