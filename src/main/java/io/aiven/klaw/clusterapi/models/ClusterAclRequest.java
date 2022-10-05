@@ -11,7 +11,7 @@ public class ClusterAclRequest implements Serializable {
 
   @NotNull private String aclNativeType;
 
-  @NotNull private AclOperationType aclOperationType;
+  @NotNull private RequestOperationType requestOperationType;
 
   @NotNull private String topicName;
 

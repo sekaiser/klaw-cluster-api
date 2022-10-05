@@ -1,7 +1,7 @@
 package io.aiven.klaw.clusterapi.services;
 
 import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
-import io.aiven.klaw.clusterapi.models.AclOperationType;
+import io.aiven.klaw.clusterapi.models.RequestOperationType;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ResultType;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
@@ -115,7 +115,7 @@ public class ApacheKafkaAclService {
           host = "*";
           principal = "User:" + aclSsl;
 
-          if (AclOperationType.CREATE.equals(clusterAclRequest.getAclOperationType())) {
+          if (RequestOperationType.CREATE.equals(clusterAclRequest.getRequestOperationType())) {
             if (updateTopicProducerWriteAcls(
                 clusterAclRequest.getTopicName(), client, patternType, host, principal))
               return "Acl already exists. success";
@@ -128,7 +128,7 @@ public class ApacheKafkaAclService {
               patternType,
               host,
               principal,
-              clusterAclRequest.getAclOperationType().value);
+              clusterAclRequest.getRequestOperationType().value);
         }
       }
 
@@ -138,7 +138,7 @@ public class ApacheKafkaAclService {
         host = aclIp;
         principal = "User:*";
 
-        if (clusterAclRequest.getAclOperationType().equals(AclOperationType.CREATE)) {
+        if (clusterAclRequest.getRequestOperationType().equals(RequestOperationType.CREATE)) {
           if (updateTopicProducerWriteAcls(
               clusterAclRequest.getTopicName(), client, patternType, host, principal))
             return "Acl already exists. success";
@@ -152,7 +152,7 @@ public class ApacheKafkaAclService {
             patternType,
             host,
             principal,
-            clusterAclRequest.getAclOperationType().value);
+            clusterAclRequest.getRequestOperationType().value);
       }
 
     } catch (Exception e) {
@@ -296,7 +296,7 @@ public class ApacheKafkaAclService {
           isValidParam = true;
         }
 
-        if (AclOperationType.CREATE.equals(clusterAclRequest.getAclOperationType())
+        if (RequestOperationType.CREATE.equals(clusterAclRequest.getRequestOperationType())
             && isValidParam) {
           List<AclBinding> aclListArray = new ArrayList<>();
 
@@ -346,7 +346,7 @@ public class ApacheKafkaAclService {
         host = aclIp;
         principal = "User:*";
 
-        if (AclOperationType.CREATE.equals(clusterAclRequest.getAclOperationType())) {
+        if (RequestOperationType.CREATE.equals(clusterAclRequest.getRequestOperationType())) {
           List<AclBinding> aclListArray = new ArrayList<>();
 
           ResourcePattern resourcePattern =

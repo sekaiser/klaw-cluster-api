@@ -1,12 +1,13 @@
 package io.aiven.klaw.clusterapi.models;
 
-public enum AclOperationType {
+public enum RequestOperationType {
   CREATE("Create"),
+  UPDATE("Update"),
   DELETE("Delete");
 
   public final String value;
 
-  AclOperationType(String value) {
+  RequestOperationType(String value) {
     this.value = value;
   }
 }

@@ -1,7 +1,7 @@
 package io.aiven.klaw.clusterapi;
 
 import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
-import io.aiven.klaw.clusterapi.models.AclOperationType;
+import io.aiven.klaw.clusterapi.models.RequestOperationType;
 import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
@@ -124,7 +124,7 @@ public class UtilMethods {
         .aclType(aclType)
         .aclIp("11.12.33.122")
         .aclSsl(null)
-        .aclOperationType(AclOperationType.CREATE)
+        .requestOperationType(RequestOperationType.CREATE)
         .aclNativeType(AclsNativeType.NATIVE.name())
         .aclIpPrincipleType(AclIPPrincipleType.PRINCIPAL.name())
         .build();
