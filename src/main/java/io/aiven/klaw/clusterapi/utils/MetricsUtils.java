@@ -38,7 +38,9 @@ public class MetricsUtils {
     }
 
     try {
-      if (!metricsClientsMap.containsKey(jmxUrl)) metricsClientsMap.put(jmxUrl, jmxConnector);
+      if (!metricsClientsMap.containsKey(jmxUrl)) {
+        metricsClientsMap.put(jmxUrl, jmxConnector);
+      }
       return jmxConnector;
     } catch (Exception e) {
       metricsClientsMap.remove(jmxUrl);

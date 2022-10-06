@@ -148,7 +148,9 @@ public class AivenApiService {
           newRGroupMap.put("resourceName", "-na-");
           aclsListUpdated.add(newRGroupMap);
         }
-        if (!"ADMIN".equals(aclsMapUpdated.get("operation"))) aclsListUpdated.add(aclsMapUpdated);
+        if (!"ADMIN".equals(aclsMapUpdated.get("operation"))) {
+          aclsListUpdated.add(aclsMapUpdated);
+        }
       }
 
       return new HashSet<>(aclsListUpdated);

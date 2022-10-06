@@ -50,7 +50,9 @@ public class ApacheKafkaTopicService {
     log.info("loadTopics {} {}", environment, protocol);
     AdminClient client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
     Set<HashMap<String, String>> topics = new HashSet<>();
-    if (client == null) throw new Exception("Cannot connect to cluster.");
+    if (client == null) {
+      throw new Exception("Cannot connect to cluster.");
+    }
 
     ListTopicsOptions listTopicsOptions = new ListTopicsOptions();
     listTopicsOptions = listTopicsOptions.listInternal(false);
@@ -72,7 +74,9 @@ public class ApacheKafkaTopicService {
             "replicationFactor",
             "" + topicDesc.get(topicName).partitions().get(0).replicas().size());
         hashMap.put("partitions", "" + topicDesc.get(topicName).partitions().size());
-        if (!topicName.startsWith("_confluent")) topics.add(hashMap);
+        if (!topicName.startsWith("_confluent")) {
+          topics.add(hashMap);
+        }
       }
 
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -91,7 +95,9 @@ public class ApacheKafkaTopicService {
               clusterTopicRequest.getEnv(),
               clusterTopicRequest.getProtocol(),
               clusterTopicRequest.getClusterName());
-      if (client == null) throw new Exception("Cannot connect to cluster.");
+      if (client == null) {
+        throw new Exception("Cannot connect to cluster.");
+      }
 
       NewTopic topic =
           new NewTopic(
@@ -141,7 +147,9 @@ public class ApacheKafkaTopicService {
             clusterTopicRequest.getProtocol(),
             clusterTopicRequest.getClusterName());
 
-    if (client == null) throw new Exception("Cannot connect to cluster.");
+    if (client == null) {
+      throw new Exception("Cannot connect to cluster.");
+    }
 
     DescribeTopicsResult describeTopicsResult =
         client.describeTopics(Collections.singleton(clusterTopicRequest.getTopicName()));
@@ -178,7 +186,9 @@ public class ApacheKafkaTopicService {
               clusterTopicRequest.getEnv(),
               clusterTopicRequest.getProtocol(),
               clusterTopicRequest.getClusterName());
-      if (client == null) throw new Exception("Cannot connect to cluster.");
+      if (client == null) {
+        throw new Exception("Cannot connect to cluster.");
+      }
 
       DeleteTopicsResult result =
           client.deleteTopics(Collections.singletonList(clusterTopicRequest.getTopicName()));

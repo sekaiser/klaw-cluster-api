@@ -95,10 +95,11 @@ public class ClusterApiController {
       @PathVariable String serviceName)
       throws Exception {
     Set<Map<String, String>> acls;
-    if (AclsNativeType.NATIVE.name().equals(aclsNativeType))
+    if (AclsNativeType.NATIVE.name().equals(aclsNativeType)) {
       acls = apacheKafkaAclService.loadAcls(bootstrapServers, protocol, clusterName);
-    else acls = aivenApiService.listAcls(projectName, serviceName);
-
+    } else {
+      acls = aivenApiService.listAcls(projectName, serviceName);
+    }
     return new ResponseEntity<>(acls, HttpStatus.OK);
   }
 
@@ -113,7 +114,6 @@ public class ClusterApiController {
       @PathVariable String clusterName) {
     Map<Integer, Map<String, Object>> schema =
         schemaService.getSchema(bootstrapServers, protocol, topicName);
-
     return new ResponseEntity<>(schema, HttpStatus.OK);
   }
 
@@ -179,9 +179,11 @@ public class ClusterApiController {
     String result;
     try {
       if (AclsNativeType.NATIVE.name().equals(clusterAclRequest.getAclNativeType())) {
-        if (AclType.PRODUCER.value.equals(clusterAclRequest.getAclType()))
+        if (AclType.PRODUCER.value.equals(clusterAclRequest.getAclType())) {
           result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-        else result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        } else {
+          result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        }
         return new ResponseEntity<>(ApiResponse.builder().result(result).build(), HttpStatus.OK);
       } else if (AclsNativeType.AIVEN.name().equals(clusterAclRequest.getAclNativeType())) {
         resultMap = aivenApiService.createAcls(clusterAclRequest);
@@ -208,9 +210,11 @@ public class ClusterApiController {
     try {
       if (AclsNativeType.NATIVE.name().equals(clusterAclRequest.getAclNativeType())) {
 
-        if (AclType.PRODUCER.value.equals(clusterAclRequest.getAclType()))
+        if (AclType.PRODUCER.value.equals(clusterAclRequest.getAclType())) {
           result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-        else result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        } else {
+          result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        }
 
         return new ResponseEntity<>(ApiResponse.builder().result(result).build(), HttpStatus.OK);
       } else if (AclsNativeType.AIVEN.name().equals(clusterAclRequest.getAclNativeType())) {

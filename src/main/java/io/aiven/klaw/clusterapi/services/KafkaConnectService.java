@@ -112,7 +112,9 @@ public class KafkaConnectService {
   public List<String> getConnectors(String environmentVal, String protocol) {
     try {
       log.info("Into getConnectors {} {}", environmentVal, protocol);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       String suffixUrl = environmentVal + "/connectors";
       Pair<String, RestTemplate> reqDetails =
@@ -134,7 +136,9 @@ public class KafkaConnectService {
       String connector, String environmentVal, String protocol) {
     try {
       log.info("Into getConnectorDetails {} {}", environmentVal, protocol);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       String suffixUrl = environmentVal + "/connectors" + "/" + connector;
       Pair<String, RestTemplate> reqDetails =

@@ -183,24 +183,8 @@ public class ClusterApiControllerTest {
   public void createAclsConsumer() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
-    //    MultiValueMap<String, String> topicRequest =
-    // utilMethods.getMappedValuesAcls(AclType.CONSUMER.value);
-    //
-    //    String jsonReq = new ObjectMapper().writeValueAsString(topicRequest);
 
-    when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest))
-        //            topicRequest.get("topicName").get(0),
-        //            topicRequest.get("env").get(0),
-        //            topicRequest.get("protocol").get(0),
-        //            topicRequest.get("clusterName").get(0),
-        //            topicRequest.get("acl_ip").get(0),
-        //            topicRequest.get("acl_ssl").get(0),
-        //            topicRequest.get("consumerGroup").get(0),
-        //            "Create",
-        //            "false",
-        //            AclIPPrincipleType.PRINCIPLE.name(),
-        //            AclsNativeType.NATIVE.name()))
-        .thenReturn("success1");
+    when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest)).thenReturn("success1");
 
     String response =
         mvc.perform(
@@ -212,7 +196,6 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    // assertEquals(ApiResultStatus.SUCCESS.value, response);
     assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 
@@ -221,22 +204,8 @@ public class ClusterApiControllerTest {
   public void createAclsConsumerFail() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
-    //    MultiValueMap<String, String> topicRequest =
-    // utilMethods.getMappedValuesAcls(AclType.CONSUMER.value);
-    //    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
 
     when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest))
-        //            topicRequest.get("topicName").get(0),
-        //            topicRequest.get("env").get(0),
-        //            topicRequest.get("protocol").get(0),
-        //            topicRequest.get("clusterName").get(0),
-        //            topicRequest.get("acl_ip").get(0),
-        //            topicRequest.get("acl_ssl").get(0),
-        //            topicRequest.get("consumerGroup").get(0),
-        //            "Create",
-        //            "false",
-        //            AclIPPrincipleType.PRINCIPAL.name(),
-        //            AclsNativeType.NATIVE.name()))
         .thenThrow(new RuntimeException("Error creating acls"));
 
     String response =

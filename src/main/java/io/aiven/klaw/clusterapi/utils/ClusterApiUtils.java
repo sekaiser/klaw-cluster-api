@@ -90,39 +90,47 @@ public class ClusterApiUtils {
     try {
       switch (protocol) {
         case "PLAINTEXT":
-          if (!adminClientsMap.containsKey(adminClientKey))
+          if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient = AdminClient.create(getPlainProperties(envHost));
-          else {
+          } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
           break;
 
         case "SSL":
-          if (!adminClientsMap.containsKey(adminClientKey))
+          if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient = AdminClient.create(getSslProperties(envHost, clusterNameTenantId));
-          else adminClient = adminClientsMap.get(adminClientKey);
+          } else {
+            adminClient = adminClientsMap.get(adminClientKey);
+          }
           break;
 
         case "SASL_PLAIN":
-          if (!adminClientsMap.containsKey(adminClientKey))
+          if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient = AdminClient.create(getSaslPlainProperties(envHost, clusterNameTenantId));
-          else adminClient = adminClientsMap.get(adminClientKey);
+          } else {
+            adminClient = adminClientsMap.get(adminClientKey);
+          }
           break;
 
         case "SASL_SSL-PLAINMECHANISM":
-          if (!adminClientsMap.containsKey(adminClientKey))
+          if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
                     getSaslSsl_PlainMechanismProperties(envHost, clusterNameTenantId));
-          else adminClient = adminClientsMap.get(adminClientKey);
+          } else {
+            adminClient = adminClientsMap.get(adminClientKey);
+          }
           break;
 
         case "SASL_SSL-GSSAPIMECHANISM":
-          if (!adminClientsMap.containsKey(adminClientKey))
+          if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
                     getSaslSsl_GSSAPIMechanismProperties(envHost, clusterNameTenantId));
-          else adminClient = adminClientsMap.get(adminClientKey);
+          } else {
+            adminClient = adminClientsMap.get(adminClientKey);
+          }
           break;
       }
     } catch (Exception exception) {
@@ -138,8 +146,9 @@ public class ClusterApiUtils {
 
     try {
       adminClient.listTopics().names().get();
-      if (!adminClientsMap.containsKey(adminClientKey))
+      if (!adminClientsMap.containsKey(adminClientKey)) {
         adminClientsMap.put(adminClientKey, adminClient);
+      }
       return adminClient;
     } catch (Exception e) {
       adminClientsMap.remove(adminClientKey);
@@ -337,10 +346,11 @@ public class ClusterApiUtils {
       connectorsUrl = HTTP_PREFIX + suffixUrl;
       restTemplate = new RestTemplate();
     } else if (KafkaProtocols.SSL.name().equals(protocol)) {
-      if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType))
+      if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType)) {
         connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + suffixUrl;
-      else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType))
+      } else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType)) {
         connectorsUrl = HTTPS_PREFIX + schemaRegistryCredentials + "@" + suffixUrl;
+      }
       restTemplate = new RestTemplate(SslContextConfig.requestFactory);
     } else {
       restTemplate = new RestTemplate();

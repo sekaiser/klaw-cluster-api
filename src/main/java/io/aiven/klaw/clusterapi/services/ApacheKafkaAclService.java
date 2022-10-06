@@ -54,7 +54,9 @@ public class ApacheKafkaAclService {
     Set<Map<String, String>> acls = new HashSet<>();
 
     AdminClient client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
-    if (client == null) throw new Exception("Cannot connect to cluster.");
+    if (client == null) {
+      throw new Exception("Cannot connect to cluster.");
+    }
 
     try {
       AclBindingFilter aclBindingFilter = AclBindingFilter.ANY;
@@ -65,26 +67,7 @@ public class ApacheKafkaAclService {
           .get(TIME_OUT_SECS_FOR_ACLS, TimeUnit.SECONDS)
           .forEach(
               aclBinding -> {
-                if (aclBinding
-                    .pattern()
-                    .patternType()
-                    .name()
-                    .equals(AclPatternType.LITERAL.value)) {
-                  Map<String, String> aclbindingMap = new HashMap<>();
-                  aclbindingMap.put("host", aclBinding.entry().host());
-                  aclbindingMap.put("principle", aclBinding.entry().principal());
-                  aclbindingMap.put("operation", aclBinding.entry().operation().toString());
-                  aclbindingMap.put(
-                      "permissionType", aclBinding.entry().permissionType().toString());
-                  aclbindingMap.put("resourceType", aclBinding.pattern().resourceType().toString());
-                  aclbindingMap.put("resourceName", aclBinding.pattern().name());
-
-                  if (!aclBinding.pattern().resourceType().toString().equals("CLUSTER")) {
-                    if (aclBinding.entry().operation().toString().equals("WRITE")
-                        || aclBinding.entry().operation().toString().equals("READ"))
-                      acls.add(aclbindingMap);
-                  }
-                }
+                filterAndUpdateAclBindings(acls, aclBinding);
               });
     } catch (Exception e) {
       log.error("Error " + e.getMessage());
@@ -93,21 +76,45 @@ public class ApacheKafkaAclService {
     return acls;
   }
 
-  public synchronized String updateProducerAcl(ClusterAclRequest clusterAclRequest) {
+  private static void filterAndUpdateAclBindings(
+      Set<Map<String, String>> acls, AclBinding aclBinding) {
+    if (aclBinding.pattern().patternType().name().equals(AclPatternType.LITERAL.value)) {
+      Map<String, String> aclbindingMap = new HashMap<>();
+      aclbindingMap.put("host", aclBinding.entry().host());
+      aclbindingMap.put("principle", aclBinding.entry().principal());
+      aclbindingMap.put("operation", aclBinding.entry().operation().toString());
+      aclbindingMap.put("permissionType", aclBinding.entry().permissionType().toString());
+      aclbindingMap.put("resourceType", aclBinding.pattern().resourceType().toString());
+      aclbindingMap.put("resourceName", aclBinding.pattern().name());
 
+      if (!aclBinding.pattern().resourceType().toString().equals("CLUSTER")) {
+        if (aclBinding.entry().operation().toString().equals("WRITE")
+            || aclBinding.entry().operation().toString().equals("READ")) {
+          acls.add(aclbindingMap);
+        }
+      }
+    }
+  }
+
+  public synchronized String updateProducerAcl(ClusterAclRequest clusterAclRequest) {
     log.info("updateProducerAclRequest {}", clusterAclRequest);
     AdminClient client;
     try {
       PatternType patternType;
-      if (clusterAclRequest.isPrefixAcl()) patternType = PatternType.PREFIXED;
-      else patternType = PatternType.LITERAL;
+      if (clusterAclRequest.isPrefixAcl()) {
+        patternType = PatternType.PREFIXED;
+      } else {
+        patternType = PatternType.LITERAL;
+      }
 
       client =
           clusterApiUtils.getAdminClient(
               clusterAclRequest.getEnv(),
               clusterAclRequest.getProtocol(),
               clusterAclRequest.getClusterName());
-      if (client == null) return ApiResultStatus.FAILURE.value;
+      if (client == null) {
+        return ApiResultStatus.FAILURE.value;
+      }
 
       String host,
           principal,
@@ -122,8 +129,9 @@ public class ApacheKafkaAclService {
 
           if (RequestOperationType.CREATE.equals(clusterAclRequest.getRequestOperationType())) {
             if (updateTopicProducerWriteAcls(
-                clusterAclRequest.getTopicName(), client, patternType, host, principal))
+                clusterAclRequest.getTopicName(), client, patternType, host, principal)) {
               return "Acl already exists. success";
+            }
           } else {
             processOtherRequests(clusterAclRequest, client, patternType, host, principal);
           }
@@ -139,14 +147,14 @@ public class ApacheKafkaAclService {
 
       if (aclIp != null && aclIp.trim().length() > 0) {
         aclIp = aclIp.trim();
-
         host = aclIp;
         principal = "User:*";
 
         if (clusterAclRequest.getRequestOperationType().equals(RequestOperationType.CREATE)) {
           if (updateTopicProducerWriteAcls(
-              clusterAclRequest.getTopicName(), client, patternType, host, principal))
+              clusterAclRequest.getTopicName(), client, patternType, host, principal)) {
             return "Acl already exists. success";
+          }
         } else {
           processOtherRequests(clusterAclRequest, client, patternType, host, principal);
         }
@@ -226,8 +234,9 @@ public class ApacheKafkaAclService {
   private boolean aclExists(AdminClient client, AclBindingFilter aclBindingFilter) {
     DescribeAclsResult aclsResult = client.describeAcls(aclBindingFilter);
     try {
-      if (aclsResult.values().get(TIME_OUT_SECS_FOR_ACLS, TimeUnit.SECONDS).size() == 1)
+      if (aclsResult.values().get(TIME_OUT_SECS_FOR_ACLS, TimeUnit.SECONDS).size() == 1) {
         return true;
+      }
     } catch (InterruptedException | TimeoutException | ExecutionException e) {
       e.printStackTrace();
     }
@@ -245,7 +254,9 @@ public class ApacheKafkaAclService {
 
     List<AclBinding> aclListArray = new ArrayList<>();
     // Adding transactional id acls
-    if (transactionalId != null) transactionalId = transactionalId.trim();
+    if (transactionalId != null) {
+      transactionalId = transactionalId.trim();
+    }
 
     if (transactionalId != null && transactionalId.length() > 0) {
       ResourcePattern resourcePatternTxn =
@@ -255,8 +266,9 @@ public class ApacheKafkaAclService {
       AclBinding aclBinding1Txn = new AclBinding(resourcePatternTxn, aclEntryTxn);
       aclListArray.add(aclBinding1Txn);
 
-      if (aclOperation.equals("Create")) client.createAcls(aclListArray);
-      else {
+      if (aclOperation.equals("Create")) {
+        client.createAcls(aclListArray);
+      } else {
         List<AclBindingFilter> aclListArrayDel = new ArrayList<>();
 
         ResourcePatternFilter resourcePattern =
@@ -284,7 +296,9 @@ public class ApacheKafkaAclService {
               clusterAclRequest.getEnv(),
               clusterAclRequest.getProtocol(),
               clusterAclRequest.getClusterName());
-      if (client == null) return ApiResultStatus.FAILURE.value;
+      if (client == null) {
+        return ApiResultStatus.FAILURE.value;
+      }
 
       String host = null,
           principal = null,
@@ -347,7 +361,6 @@ public class ApacheKafkaAclService {
 
       if (aclIp != null && aclIp.trim().length() > 0) {
         aclIp = aclIp.trim();
-
         host = aclIp;
         principal = "User:*";
 

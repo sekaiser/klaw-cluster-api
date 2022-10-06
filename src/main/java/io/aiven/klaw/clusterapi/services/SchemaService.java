@@ -74,7 +74,9 @@ public class SchemaService {
       String environmentVal, String protocol, String topicName) {
     try {
       log.info("Into getSchema request {} {} {}", topicName, environmentVal, protocol);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       List<Integer> versionsList = getSchemaVersions(environmentVal, topicName, protocol);
       String schemaCompatibility = getSchemaCompatibility(environmentVal, topicName, protocol);
@@ -93,7 +95,9 @@ public class SchemaService {
           ResponseEntity<HashMap> responseNew =
               reqDetails.getRight().getForEntity(reqDetails.getLeft(), HashMap.class, params);
           Map<String, Object> schemaResponse = responseNew.getBody();
-          if (schemaResponse != null) schemaResponse.put("compatibility", schemaCompatibility);
+          if (schemaResponse != null) {
+            schemaResponse.put("compatibility", schemaCompatibility);
+          }
 
           log.info(Objects.requireNonNull(responseNew.getBody()).toString());
           allSchemaObjects.put(schemaVersion, schemaResponse);
@@ -111,7 +115,9 @@ public class SchemaService {
       String environmentVal, String topicName, String protocol) {
     try {
       log.info("Into getSchema versions {} {}", topicName, environmentVal);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       String suffixUrl = environmentVal + "/subjects/" + topicName + "-value/versions";
       Pair<String, RestTemplate> reqDetails =
@@ -132,7 +138,9 @@ public class SchemaService {
   private String getSchemaCompatibility(String environmentVal, String topicName, String protocol) {
     try {
       log.info("Into getSchema compatibility {} {}", topicName, environmentVal);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       String suffixUrl = environmentVal + "/config/" + topicName + "-value";
       Pair<String, RestTemplate> reqDetails =
@@ -154,15 +162,18 @@ public class SchemaService {
       String environmentVal, String topicName, boolean isForce, String protocol) {
     try {
       log.info("Into setSchema compatibility {} {}", topicName, environmentVal);
-      if (environmentVal == null) return false;
+      if (environmentVal == null) {
+        return false;
+      }
 
       String suffixUrl = environmentVal + "/config/" + topicName + "-value";
       Pair<String, RestTemplate> reqDetails =
           clusterApiUtils.getRequestDetails(suffixUrl, protocol, KafkaClustersType.SCHEMA_REGISTRY);
 
       Map<String, String> params = new HashMap<>();
-      if (isForce) params.put("compatibility", "NONE");
-      else params.put("compatibility", defaultSchemaCompatibility);
+      if (isForce) {
+        params.put("compatibility", "NONE");
+      } else params.put("compatibility", defaultSchemaCompatibility);
 
       HttpHeaders headers = new HttpHeaders();
       headers.set("Content-Type", SCHEMA_REGISTRY_CONTENT_TYPE);

@@ -51,9 +51,11 @@ public class TopicContentsService {
     Map<Long, String> eventMap = new TreeMap<>();
     KafkaConsumer<String, String> consumer;
 
-    if (consumerGroupId.equals("notdefined"))
+    if (consumerGroupId.equals("notdefined")) {
       consumer = getKafkaConsumer(kwGenericConsumerGroupId, bootStrapServers, protocol);
-    else consumer = getKafkaConsumer(consumerGroupId, bootStrapServers, protocol);
+    } else {
+      consumer = getKafkaConsumer(consumerGroupId, bootStrapServers, protocol);
+    }
 
     consumer.subscribe(Collections.singleton(topicName));
     consumer.poll(Duration.ofMillis(defaultPollInterval));
@@ -67,7 +69,9 @@ public class TopicContentsService {
         long beginningOffset = consumer.position(tp);
         long endOffset = endOffsets.get(tp);
         newOffset = endOffset - offsetPosition;
-        if (newOffset < beginningOffset) newOffset = beginningOffset;
+        if (newOffset < beginningOffset) {
+          newOffset = beginningOffset;
+        }
 
         consumer.seek(tp, newOffset);
       }
