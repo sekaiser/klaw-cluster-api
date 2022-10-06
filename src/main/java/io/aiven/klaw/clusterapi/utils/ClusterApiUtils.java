@@ -121,6 +121,18 @@ public class ClusterApiUtils {
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
+
+          break;
+
+        case "SASL_SSL-SCRAMMECHANISM":
+          if (!adminClientsMap.containsKey(adminClientKey)) {
+            adminClient =
+                AdminClient.create(
+                    getSaslSsl_ScramMechanismProperties(envHost, clusterNameTenantId));
+          } else {
+            adminClient = adminClientsMap.get(adminClientKey);
+          }
+
           break;
 
         case "SASL_SSL-GSSAPIMECHANISM":
@@ -226,6 +238,31 @@ public class ClusterApiUtils {
       }
     } catch (Exception exception) {
       log.error("Error : Cannot set SASL SSL PLAIN Config properties.");
+    }
+
+    return props;
+  }
+
+  public Properties getSaslSsl_ScramMechanismProperties(String environment, String clusterName) {
+    Properties props = getSslConfig(clusterName);
+
+    try {
+      props.put("bootstrap.servers", environment);
+      props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+      props.put(AdminClientConfig.CLIENT_ID_CONFIG, "klawclientsaslsslscram");
+      setOtherConfig(props);
+
+      if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.scram"))) {
+        props.put(SaslConfigs.SASL_MECHANISM, env.getProperty("kafkasasl.saslmechanism.scram"));
+      }
+      if (!Strings.isNullOrEmpty(
+          env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.scram"))) {
+        props.put(
+            SaslConfigs.SASL_JAAS_CONFIG,
+            env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.scram"));
+      }
+    } catch (Exception exception) {
+      log.error("Error : Cannot set SASL SSL SCRAM Config properties.");
     }
 
     return props;
