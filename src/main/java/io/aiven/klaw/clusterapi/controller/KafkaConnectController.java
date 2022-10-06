@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -58,25 +57,15 @@ public class KafkaConnectController {
 
   @PostMapping(value = "/updateConnector")
   public ResponseEntity<Map<String, String>> updateConnector(
-      @RequestBody MultiValueMap<String, String> fullConnectorConfig) {
-    String env = fullConnectorConfig.get("env").get(0);
-    String protocol = fullConnectorConfig.get("protocol").get(0);
-    String connectorName = fullConnectorConfig.get("connectorName").get(0);
-    String connectorConfig = fullConnectorConfig.get("connectorConfig").get(0);
-
-    Map<String, String> result =
-        kafkaConnectService.updateConnector(env, protocol, connectorName, connectorConfig);
-    return new ResponseEntity<>(result, HttpStatus.OK);
+      @RequestBody @Valid ClusterConnectorRequest clusterConnectorRequest) {
+    return new ResponseEntity<>(
+        kafkaConnectService.updateConnector(clusterConnectorRequest), HttpStatus.OK);
   }
 
   @PostMapping(value = "/deleteConnector")
   public ResponseEntity<Map<String, String>> deleteConnector(
-      @RequestBody MultiValueMap<String, String> connectorConfig) {
-    String env = connectorConfig.get("env").get(0);
-    String protocol = connectorConfig.get("protocol").get(0);
-    String connectorName = connectorConfig.get("connectorName").get(0);
-
-    Map<String, String> result = kafkaConnectService.deleteConnector(env, protocol, connectorName);
-    return new ResponseEntity<>(result, HttpStatus.OK);
+      @RequestBody @Valid ClusterConnectorRequest clusterConnectorRequest) {
+    return new ResponseEntity<>(
+        kafkaConnectService.deleteConnector(clusterConnectorRequest), HttpStatus.OK);
   }
 }

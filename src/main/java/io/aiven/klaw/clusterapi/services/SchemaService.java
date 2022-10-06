@@ -1,8 +1,8 @@
 package io.aiven.klaw.clusterapi.services;
 
 import io.aiven.klaw.clusterapi.models.ApiResponse;
-import io.aiven.klaw.clusterapi.models.ClusterResponseStatus;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
+import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.KafkaClustersType;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
@@ -175,7 +175,7 @@ public class SchemaService {
     }
   }
 
-  protected String getSchemaRegistryStatus(String environmentVal, String protocol) {
+  protected ClusterStatus getSchemaRegistryStatus(String environmentVal, String protocol) {
 
     String suffixUrl = environmentVal + "/subjects";
     Pair<String, RestTemplate> reqDetails =
@@ -185,10 +185,10 @@ public class SchemaService {
 
     try {
       reqDetails.getRight().getForEntity(reqDetails.getLeft(), Object.class, params);
-      return ClusterResponseStatus.ONLINE.value;
+      return ClusterStatus.ONLINE;
     } catch (RestClientException e) {
       e.printStackTrace();
-      return ClusterResponseStatus.OFFLINE.value;
+      return ClusterStatus.OFFLINE;
     }
   }
 }

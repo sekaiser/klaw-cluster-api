@@ -1,7 +1,8 @@
 package io.aiven.klaw.clusterapi.services;
 
+import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
-import io.aiven.klaw.clusterapi.models.ResultType;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,24 +81,9 @@ public class ApacheKafkaTopicService {
     return topics;
   }
 
-  public synchronized String createTopic(ClusterTopicRequest clusterTopicRequest)
-      //      String name,
-      //                                         String partitions,
-      //                                         String replicationFactor,
-      //                                         String environment,
-      //                                         String protocol,
-      //                                         String clusterName)
+  public synchronized ApiResponse createTopic(ClusterTopicRequest clusterTopicRequest)
       throws Exception {
-
-    log.info(
-        "createTopic Name: {} Partitions:{} Replication factor:{} Environment:{} Protocol:{} clusterName:{}",
-        clusterTopicRequest.getTopicName(),
-        clusterTopicRequest.getPartitions(),
-        clusterTopicRequest.getReplicationFactor(),
-        clusterTopicRequest.getEnv(),
-        clusterTopicRequest.getProtocol(),
-        clusterTopicRequest.getClusterName());
-
+    log.info("createTopic {}", clusterTopicRequest);
     AdminClient client;
     try {
       client =
@@ -142,83 +128,65 @@ public class ApacheKafkaTopicService {
       throw e;
     }
 
-    return ResultType.SUCCESS.value;
+    return ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
   }
 
-  public synchronized String updateTopic(
-      String topicName,
-      String partitions,
-      String replicationFactor,
-      String environment,
-      String protocol,
-      String clusterName)
+  public synchronized ApiResponse updateTopic(ClusterTopicRequest clusterTopicRequest)
       throws Exception {
+    log.info("updateTopic Name: {}", clusterTopicRequest);
 
-    log.info(
-        "updateTopic Name: {} Partitions:{} Replication factor:{} Environment:{} Protocol:{} clusterName:{}",
-        topicName,
-        partitions,
-        replicationFactor,
-        environment,
-        protocol,
-        clusterName);
-
-    AdminClient client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
+    AdminClient client =
+        clusterApiUtils.getAdminClient(
+            clusterTopicRequest.getEnv(),
+            clusterTopicRequest.getProtocol(),
+            clusterTopicRequest.getClusterName());
 
     if (client == null) throw new Exception("Cannot connect to cluster.");
 
     DescribeTopicsResult describeTopicsResult =
-        client.describeTopics(Collections.singleton(topicName));
+        client.describeTopics(Collections.singleton(clusterTopicRequest.getTopicName()));
     TopicDescription result =
-        describeTopicsResult.all().get(TIME_OUT_SECS_FOR_TOPICS, TimeUnit.SECONDS).get(topicName);
+        describeTopicsResult
+            .all()
+            .get(TIME_OUT_SECS_FOR_TOPICS, TimeUnit.SECONDS)
+            .get(clusterTopicRequest.getTopicName());
 
-    if (result.partitions().size() > Integer.parseInt(partitions)) {
+    if (result.partitions().size() > clusterTopicRequest.getPartitions()) {
       // delete topic and recreate
-      deleteTopic(topicName, environment, protocol, clusterName);
-      createTopic(
-          ClusterTopicRequest.builder()
-              .env(environment)
-              .protocol(protocol)
-              .topicName(topicName)
-              .partitions(Integer.parseInt(partitions))
-              .replicationFactor(Short.parseShort(replicationFactor))
-              .clusterName(clusterName)
-              .build());
+      deleteTopic(clusterTopicRequest);
+      createTopic(clusterTopicRequest);
     } else {
-      // update config
-      //            ConfigResource resource = new ConfigResource(ConfigResource.Type.TOPIC,
-      // topicName);
-      //            ConfigEntry retentionEntry = new ConfigEntry(TopicConfig., "60000");
-      //            Map<ConfigResource, Collection<AlterConfigOp>> updateConfig = new HashMap<>();
-      //            AlterConfigOp alterConfigOp = new AlterConfigOp();
-      //            client.incrementalAlterConfigs(updateConfig);
-
       Map<String, NewPartitions> newPartitionSet = new HashMap<>();
-      newPartitionSet.put(topicName, NewPartitions.increaseTo(Integer.parseInt(partitions)));
+      newPartitionSet.put(
+          clusterTopicRequest.getTopicName(),
+          NewPartitions.increaseTo(clusterTopicRequest.getPartitions()));
 
       client.createPartitions(newPartitionSet);
     }
 
-    return ResultType.SUCCESS.value;
+    return ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
   }
 
-  public synchronized void deleteTopic(
-      String topicName, String environment, String protocol, String clusterName) throws Exception {
-
-    log.info(
-        "deleteTopic Topic name:{} Env:{} Protocol:{} clusterName:{}",
-        topicName,
-        environment,
-        protocol,
-        clusterName);
+  public synchronized ApiResponse deleteTopic(ClusterTopicRequest clusterTopicRequest)
+      throws Exception {
+    log.info("deleteTopic Topic {}", clusterTopicRequest);
 
     AdminClient client;
     try {
-      client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
+      client =
+          clusterApiUtils.getAdminClient(
+              clusterTopicRequest.getEnv(),
+              clusterTopicRequest.getProtocol(),
+              clusterTopicRequest.getClusterName());
       if (client == null) throw new Exception("Cannot connect to cluster.");
 
-      DeleteTopicsResult result = client.deleteTopics(Collections.singletonList(topicName));
-      result.values().get(topicName).get(TIME_OUT_SECS_FOR_TOPICS, TimeUnit.SECONDS);
+      DeleteTopicsResult result =
+          client.deleteTopics(Collections.singletonList(clusterTopicRequest.getTopicName()));
+      result
+          .values()
+          .get(clusterTopicRequest.getTopicName())
+          .get(TIME_OUT_SECS_FOR_TOPICS, TimeUnit.SECONDS);
+      return ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
     } catch (KafkaException e) {
       String errorMessage = "Invalid properties: ";
       log.error(errorMessage, e);
@@ -231,7 +199,7 @@ public class ApacheKafkaTopicService {
         Thread.currentThread().interrupt();
         errorMessage = e.getMessage();
       }
-      log.error("Unable to delete topic {}, {}", topicName, errorMessage);
+      log.error("Unable to delete topic {}, {}", clusterTopicRequest.getTopicName(), errorMessage);
 
       throw e;
     } catch (Exception e) {

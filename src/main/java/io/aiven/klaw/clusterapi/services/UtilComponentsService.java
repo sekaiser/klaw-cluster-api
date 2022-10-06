@@ -1,6 +1,6 @@
 package io.aiven.klaw.clusterapi.services;
 
-import io.aiven.klaw.clusterapi.models.ClusterResponseStatus;
+import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
@@ -41,10 +41,10 @@ public class UtilComponentsService {
 
   //    public String reloadTruststore(String protocol, String clusterName){
   //        getAdminClient.removeSSLElementFromAdminClientMap(protocol, clusterName);
-  //        return ResultType.SUCCESS.value;
+  //        return ApiResultStatus.SUCCESS.value;
   //    }
 
-  public String getStatus(
+  public ClusterStatus getStatus(
       String environment, String protocol, String clusterName, String clusterType) {
     log.info("getStatus {} {}", environment, protocol);
     switch (clusterType) {
@@ -55,21 +55,21 @@ public class UtilComponentsService {
       case "kafkaconnect":
         return kafkaConnectService.getKafkaConnectStatus(environment, protocol);
       default:
-        return ClusterResponseStatus.OFFLINE.value;
+        return ClusterStatus.OFFLINE;
     }
   }
 
-  private String getStatusKafka(String environment, String protocol, String clusterName) {
+  private ClusterStatus getStatusKafka(String environment, String protocol, String clusterName) {
     try {
       AdminClient client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
       if (client != null) {
-        return ClusterResponseStatus.ONLINE.value;
-      } else return ClusterResponseStatus.OFFLINE.value;
+        return ClusterStatus.ONLINE;
+      } else return ClusterStatus.OFFLINE;
 
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e.getMessage());
-      return ClusterResponseStatus.OFFLINE.value;
+      return ClusterStatus.OFFLINE;
     }
   }
 }

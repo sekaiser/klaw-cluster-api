@@ -7,9 +7,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.aiven.klaw.clusterapi.UtilMethods;
+import io.aiven.klaw.clusterapi.models.AclType;
 import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
+import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
@@ -90,22 +93,22 @@ public class UtilComponentsServiceTest {
 
     when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
         .thenReturn(adminClient);
-    String result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
-    assertEquals("ONLINE", result);
+    ClusterStatus result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
+    assertEquals(ClusterStatus.ONLINE, result);
   }
 
   @Test
   public void getStatusOffline1() {
 
-    String result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
-    assertEquals("OFFLINE", result);
+    ClusterStatus result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
+    assertEquals(ClusterStatus.OFFLINE, result);
   }
 
   @Test
   public void getStatusOffline2() {
 
-    String result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
-    assertEquals("OFFLINE", result);
+    ClusterStatus result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
+    assertEquals(ClusterStatus.OFFLINE, result);
   }
 
   @Test
@@ -205,8 +208,8 @@ public class UtilComponentsServiceTest {
     when(createTopicsResult.values()).thenReturn(futureTocpiCreateResult);
     when(futureTocpiCreateResult.get(anyString())).thenReturn(kFutureVoid);
 
-    String result = apacheKafkaTopicService.createTopic(clusterTopicRequest);
-    assertEquals("success", result);
+    ApiResponse result = apacheKafkaTopicService.createTopic(clusterTopicRequest);
+    assertEquals(ApiResultStatus.SUCCESS.value, result.getResult());
   }
 
   @Test(expected = Exception.class)
@@ -264,49 +267,49 @@ public class UtilComponentsServiceTest {
   @Test
   @Ignore
   public void createProducerAcl1() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest("Consumer");
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-    assertEquals("success", result);
+    assertEquals(ApiResultStatus.SUCCESS.value, result);
   }
 
   @Test
   @Ignore
   public void createProducerAcl2() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest("Consumer");
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-    assertEquals("success", result);
+    assertEquals(ApiResultStatus.SUCCESS.value, result);
   }
 
   @Test
   @Ignore
   public void createConsumerAcl1() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest("Consumer");
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertEquals("success", result);
+    assertEquals(ApiResultStatus.SUCCESS.value, result);
   }
 
   @Test
   @Ignore
   public void createConsumerAcl2() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest("Consumer");
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertEquals("success", result);
+    assertEquals(ApiResultStatus.SUCCESS.value, result);
   }
 
   @Test

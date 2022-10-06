@@ -1,9 +1,10 @@
 package io.aiven.klaw.clusterapi.services;
 
 import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
+import io.aiven.klaw.clusterapi.models.AclPatternType;
+import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.RequestOperationType;
-import io.aiven.klaw.clusterapi.models.ResultType;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,7 +65,11 @@ public class ApacheKafkaAclService {
           .get(TIME_OUT_SECS_FOR_ACLS, TimeUnit.SECONDS)
           .forEach(
               aclBinding -> {
-                if (aclBinding.pattern().patternType().name().equals("LITERAL")) {
+                if (aclBinding
+                    .pattern()
+                    .patternType()
+                    .name()
+                    .equals(AclPatternType.LITERAL.value)) {
                   Map<String, String> aclbindingMap = new HashMap<>();
                   aclbindingMap.put("host", aclBinding.entry().host());
                   aclbindingMap.put("principle", aclBinding.entry().principal());
@@ -102,7 +107,7 @@ public class ApacheKafkaAclService {
               clusterAclRequest.getEnv(),
               clusterAclRequest.getProtocol(),
               clusterAclRequest.getClusterName());
-      if (client == null) return ResultType.FAILURE.value;
+      if (client == null) return ApiResultStatus.FAILURE.value;
 
       String host,
           principal,
@@ -157,10 +162,10 @@ public class ApacheKafkaAclService {
 
     } catch (Exception e) {
       e.printStackTrace();
-      return ResultType.FAILURE.value;
+      return ApiResultStatus.FAILURE.value;
     }
 
-    return ResultType.SUCCESS.value;
+    return ApiResultStatus.SUCCESS.value;
   }
 
   private void processOtherRequests(
@@ -279,7 +284,7 @@ public class ApacheKafkaAclService {
               clusterAclRequest.getEnv(),
               clusterAclRequest.getProtocol(),
               clusterAclRequest.getClusterName());
-      if (client == null) return ResultType.FAILURE.value;
+      if (client == null) return ApiResultStatus.FAILURE.value;
 
       String host = null,
           principal = null,
@@ -388,7 +393,7 @@ public class ApacheKafkaAclService {
       }
     } catch (Exception e) {
       e.printStackTrace();
-      return ResultType.FAILURE.value;
+      return ApiResultStatus.FAILURE.value;
     }
 
     return resultStr;
@@ -423,7 +428,7 @@ public class ApacheKafkaAclService {
     aclListArray.add(aclBinding3);
 
     client.deleteAcls(aclListArray).all().get(TIME_OUT_SECS_FOR_ACLS, TimeUnit.SECONDS);
-    resultStr = ResultType.SUCCESS.value;
+    resultStr = ApiResultStatus.SUCCESS.value;
     return resultStr;
   }
 
@@ -461,7 +466,7 @@ public class ApacheKafkaAclService {
       resultStr = "Acl already exists. success";
     } else {
       client.createAcls(aclListArray).all().get(TIME_OUT_SECS_FOR_ACLS, TimeUnit.SECONDS);
-      resultStr = ResultType.SUCCESS.value;
+      resultStr = ApiResultStatus.SUCCESS.value;
     }
     return resultStr;
   }

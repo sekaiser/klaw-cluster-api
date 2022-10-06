@@ -1,13 +1,13 @@
 package io.aiven.klaw.clusterapi.models;
 
-public enum ResultType {
+public enum ApiResultStatus {
   SUCCESS("success"),
   ERROR("error"),
   FAILURE("failure");
 
   public final String value;
 
-  private ResultType(String value) {
+  private ApiResultStatus(String value) {
     this.value = value;
   }
 }

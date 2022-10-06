@@ -3,8 +3,8 @@ package io.aiven.klaw.clusterapi.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.klaw.clusterapi.models.AivenAclResponse;
 import io.aiven.klaw.clusterapi.models.AivenAclStruct;
+import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
-import io.aiven.klaw.clusterapi.models.ResultType;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,7 +63,7 @@ public class AivenApiService {
           aivenAclStruct -> resultMap.put("aivenaclid", aivenAclStruct.getId()));
 
       if (response.getStatusCode().equals(HttpStatus.OK)) {
-        resultMap.put("result", ResultType.SUCCESS.value);
+        resultMap.put("result", ApiResultStatus.SUCCESS.value);
       } else {
         resultMap.put("result", "Failure in adding acls" + response.getBody());
       }
@@ -98,7 +98,7 @@ public class AivenApiService {
       throw new Exception("Error in deleting acls " + e.getMessage());
     }
 
-    return ResultType.SUCCESS.value;
+    return ApiResultStatus.SUCCESS.value;
   }
 
   public Set<Map<String, String>> listAcls(String projectName, String serviceName)

@@ -1,9 +1,11 @@
 package io.aiven.klaw.clusterapi.controller;
 
+import io.aiven.klaw.clusterapi.models.AclType;
 import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
+import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.services.AivenApiService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
@@ -16,7 +18,6 @@ import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,8 +41,8 @@ public class ClusterApiController {
       value = "/getApiStatus",
       method = RequestMethod.GET,
       produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<String> getApiStatus() {
-    return new ResponseEntity<>("ONLINE", HttpStatus.OK);
+  public ResponseEntity<ClusterStatus> getApiStatus() {
+    return new ResponseEntity<>(ClusterStatus.ONLINE, HttpStatus.OK);
   }
 
   //    @RequestMapping(value = "/reloadTruststore/{protocol}/{clusterName}", method =
@@ -56,15 +57,14 @@ public class ClusterApiController {
       value = "/getStatus/{bootstrapServers}/{protocol}/{clusterName}/{clusterType}",
       method = RequestMethod.GET,
       produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<String> getStatus(
+  public ResponseEntity<ClusterStatus> getStatus(
       @PathVariable String bootstrapServers,
       @PathVariable String protocol,
       @PathVariable String clusterName,
       @PathVariable String clusterType) {
-    String envStatus =
-        utilComponentsService.getStatus(bootstrapServers, protocol, clusterName, clusterType);
-
-    return new ResponseEntity<>(envStatus, HttpStatus.OK);
+    return new ResponseEntity<>(
+        utilComponentsService.getStatus(bootstrapServers, protocol, clusterName, clusterType),
+        HttpStatus.OK);
   }
 
   @RequestMapping(
@@ -137,53 +137,38 @@ public class ClusterApiController {
   }
 
   @PostMapping(value = "/createTopics")
-  public ResponseEntity<String> createTopics(
+  public ResponseEntity<ApiResponse> createTopics(
       @RequestBody @Valid ClusterTopicRequest clusterTopicRequest) {
     try {
       log.info("createTopics clusterTopicRequest {}", clusterTopicRequest);
-      apacheKafkaTopicService.createTopic(clusterTopicRequest);
+      return new ResponseEntity<>(
+          apacheKafkaTopicService.createTopic(clusterTopicRequest), HttpStatus.OK);
     } catch (Exception e) {
-      log.error(e.getMessage());
-      return new ResponseEntity<>("failure " + e, HttpStatus.OK);
+      return handleException(e);
     }
-
-    return new ResponseEntity<>("success", HttpStatus.OK);
   }
 
   @PostMapping(value = "/updateTopics")
-  public ResponseEntity<String> updateTopics(
-      @RequestBody MultiValueMap<String, String> topicRequest) {
+  public ResponseEntity<ApiResponse> updateTopics(
+      @RequestBody @Valid ClusterTopicRequest clusterTopicRequest) {
     try {
-      apacheKafkaTopicService.updateTopic(
-          topicRequest.get("topicName").get(0),
-          topicRequest.get("partitions").get(0),
-          topicRequest.get("rf").get(0),
-          topicRequest.get("env").get(0),
-          topicRequest.get("protocol").get(0),
-          topicRequest.get("clusterName").get(0));
+      log.info("updateTopics clusterTopicRequest {}", clusterTopicRequest);
+      return new ResponseEntity<>(
+          apacheKafkaTopicService.updateTopic(clusterTopicRequest), HttpStatus.OK);
     } catch (Exception e) {
-      log.error(e.getMessage());
-      return new ResponseEntity<>("failure " + e, HttpStatus.OK);
+      return handleException(e);
     }
-
-    return new ResponseEntity<>("success", HttpStatus.OK);
   }
 
   @PostMapping(value = "/deleteTopics")
-  public ResponseEntity<String> deleteTopics(
-      @RequestBody MultiValueMap<String, String> topicRequest) {
+  public ResponseEntity<ApiResponse> deleteTopics(
+      @RequestBody @Valid ClusterTopicRequest clusterTopicRequest) {
     try {
-      apacheKafkaTopicService.deleteTopic(
-          topicRequest.get("topicName").get(0),
-          topicRequest.get("env").get(0),
-          topicRequest.get("protocol").get(0),
-          topicRequest.get("clusterName").get(0));
+      return new ResponseEntity<>(
+          apacheKafkaTopicService.deleteTopic(clusterTopicRequest), HttpStatus.OK);
     } catch (Exception e) {
-      log.error(e.getMessage());
-      return new ResponseEntity<>("failure " + e, HttpStatus.OK);
+      return handleException(e);
     }
-
-    return new ResponseEntity<>("success", HttpStatus.OK);
   }
 
   @PostMapping(value = "/createAcls")
@@ -194,7 +179,7 @@ public class ClusterApiController {
     String result;
     try {
       if (AclsNativeType.NATIVE.name().equals(clusterAclRequest.getAclNativeType())) {
-        if ("Producer".equals(clusterAclRequest.getAclType()))
+        if (AclType.PRODUCER.value.equals(clusterAclRequest.getAclType()))
           result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
         else result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
         return new ResponseEntity<>(ApiResponse.builder().result(result).build(), HttpStatus.OK);
@@ -223,7 +208,7 @@ public class ClusterApiController {
     try {
       if (AclsNativeType.NATIVE.name().equals(clusterAclRequest.getAclNativeType())) {
 
-        if ("Producer".equals(clusterAclRequest.getAclType()))
+        if (AclType.PRODUCER.value.equals(clusterAclRequest.getAclType()))
           result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
         else result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
 
@@ -235,10 +220,7 @@ public class ClusterApiController {
       }
 
     } catch (Exception e) {
-      log.error(e.getMessage());
-      return new ResponseEntity<>(
-          ApiResponse.builder().result("failure in deleting acls").build(),
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      return handleException(e);
     }
     return new ResponseEntity<>(
         ApiResponse.builder().result("Not a valid request").build(),
@@ -252,9 +234,13 @@ public class ClusterApiController {
       return new ResponseEntity<>(
           schemaService.registerSchema(clusterSchemaRequest), HttpStatus.OK);
     } catch (Exception e) {
-      log.error(e.getMessage());
-      return new ResponseEntity<>(
-          ApiResponse.builder().result(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+      return handleException(e);
     }
+  }
+
+  private static ResponseEntity<ApiResponse> handleException(Exception e) {
+    log.error(e.getMessage());
+    return new ResponseEntity<>(
+        ApiResponse.builder().result(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
