@@ -56,7 +56,7 @@
         <google-java-format.version>1.15.0</google-java-format.version>
         <spotless-maven-plugin.version>2.23.0</spotless-maven-plugin.version>
         <powermock-module-junit4.version>2.0.9</powermock-module-junit4.version>
-        <spring-kafka-test.version>2.9.0</spring-kafka-test.version>
+        <spring-kafka-test.version>2.9.1</spring-kafka-test.version>
         <powermock-api-mockito2.version>2.0.9</powermock-api-mockito2.version>
         <guava.version>31.1-jre</guava.version>
         <swagger-annotations.version>2.2.2</swagger-annotations.version>
