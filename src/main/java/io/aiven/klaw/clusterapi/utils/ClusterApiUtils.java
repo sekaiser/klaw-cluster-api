@@ -121,6 +121,7 @@ public class ClusterApiUtils {
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
+
           break;
 
         case "SASL_SSL-SCRAMMECHANISM":
@@ -131,6 +132,7 @@ public class ClusterApiUtils {
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
+
           break;
 
         case "SASL_SSL-GSSAPIMECHANISM":
@@ -381,10 +383,11 @@ public class ClusterApiUtils {
       connectorsUrl = HTTP_PREFIX + suffixUrl;
       restTemplate = new RestTemplate();
     } else if (KafkaProtocols.SSL.name().equals(protocol)) {
-      if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType))
+      if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType)) {
         connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + suffixUrl;
-      else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType))
+      } else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType)) {
         connectorsUrl = HTTPS_PREFIX + schemaRegistryCredentials + "@" + suffixUrl;
+      }
       restTemplate = new RestTemplate(SslContextConfig.requestFactory);
     } else {
       restTemplate = new RestTemplate();

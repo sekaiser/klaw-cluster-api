@@ -2,17 +2,22 @@ package io.aiven.klaw.clusterapi.controller;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.klaw.clusterapi.UtilMethods;
-import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
-import io.aiven.klaw.clusterapi.models.AclsNativeType;
-import io.aiven.klaw.clusterapi.services.ManageKafkaComponents;
+import io.aiven.klaw.clusterapi.models.AclType;
+import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ApiResultStatus;
+import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
+import io.aiven.klaw.clusterapi.models.ClusterStatus;
+import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
+import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
+import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
 import io.aiven.klaw.clusterapi.services.SchemaService;
+import io.aiven.klaw.clusterapi.services.UtilComponentsService;
 import java.util.Set;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
@@ -26,13 +31,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.MultiValueMap;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ClusterApiControllerTest {
 
-  @MockBean private ManageKafkaComponents manageKafkaComponents;
+  @MockBean private UtilComponentsService utilComponentsService;
 
+  @MockBean private ApacheKafkaAclService apacheKafkaAclService;
+  @MockBean private ApacheKafkaTopicService apacheKafkaTopicService;
   @MockBean private SchemaService schemaService;
 
   private MockMvc mvc;
@@ -47,7 +53,7 @@ public class ClusterApiControllerTest {
     mvc = MockMvcBuilders.standaloneSetup(clusterApiController).dispatchOptions(true).build();
     utilMethods = new UtilMethods();
     ReflectionTestUtils.setField(
-        clusterApiController, "manageKafkaComponents", manageKafkaComponents);
+        clusterApiController, "manageKafkaComponents", utilComponentsService);
   }
 
   @Test
@@ -69,7 +75,8 @@ public class ClusterApiControllerTest {
   @Ignore
   public void getStatus() throws Exception {
     String env = "DEV";
-    when(manageKafkaComponents.getStatus(env, "PLAINTEXT", "", "")).thenReturn("ONLINE");
+    when(utilComponentsService.getStatus(env, "PLAINTEXT", "", ""))
+        .thenReturn(ClusterStatus.ONLINE);
 
     String res =
         mvc.perform(
@@ -88,7 +95,7 @@ public class ClusterApiControllerTest {
   @Ignore
   public void getTopics() throws Exception {
     String env = "DEV";
-    when(manageKafkaComponents.loadTopics(env, "PLAINTEXT", ""))
+    when(apacheKafkaTopicService.loadTopics(env, "PLAINTEXT", ""))
         .thenReturn(utilMethods.getTopics());
 
     String res =
@@ -109,7 +116,7 @@ public class ClusterApiControllerTest {
   @Ignore
   public void getAcls() throws Exception {
     String env = "DEV";
-    when(manageKafkaComponents.loadAcls(env, "PLAINTEXT", "")).thenReturn(utilMethods.getAcls());
+    when(apacheKafkaAclService.loadAcls(env, "PLAINTEXT", "")).thenReturn(utilMethods.getAcls());
 
     String res =
         mvc.perform(
@@ -128,17 +135,11 @@ public class ClusterApiControllerTest {
   @Test
   @Ignore
   public void createTopics() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesTopic();
+    ClusterTopicRequest topicRequest = utilMethods.getTopicRequest();
     String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ApiResponse apiResponse = ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
 
-    when(manageKafkaComponents.createTopic(
-            eq(topicRequest.get("topicName").get(0)),
-            eq(topicRequest.get("partitions").get(0)),
-            eq(topicRequest.get("rf").get(0)),
-            eq(topicRequest.get("env").get(0)),
-            eq(topicRequest.get("protocol").get(0)),
-            eq(topicRequest.get("clusterName").get(0))))
-        .thenReturn("success");
+    when(apacheKafkaTopicService.createTopic(topicRequest)).thenReturn(apiResponse);
 
     String response =
         mvc.perform(
@@ -150,29 +151,18 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    // assertEquals("success", response);
-    assertThat(response, CoreMatchers.containsString("failure"));
+    // assertEquals(ApiResultStatus.SUCCESS.value, response);
+    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 
   @Test
   @Ignore
   public void createAclsProducer() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesAcls("Producer");
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.PRODUCER.value);
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
 
-    when(manageKafkaComponents.updateProducerAcl(
-            topicRequest.get("topicName").get(0),
-            topicRequest.get("env").get(0),
-            topicRequest.get("protocol").get(0),
-            topicRequest.get("clusterName").get(0),
-            topicRequest.get("acl_ip").get(0),
-            topicRequest.get("acl_ssl").get(0),
-            "Create",
-            "false",
-            null,
-            AclIPPrincipleType.PRINCIPLE.name(),
-            AclsNativeType.NATIVE.name()))
-        .thenReturn("success");
+    when(apacheKafkaAclService.updateProducerAcl(clusterAclRequest))
+        .thenReturn(ApiResultStatus.SUCCESS.value);
 
     String response =
         mvc.perform(
@@ -184,30 +174,17 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    // assertEquals("success", response);
-    assertThat(response, CoreMatchers.containsString("failure"));
+    // assertEquals(ApiResultStatus.SUCCESS.value, response);
+    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 
   @Test
   @Ignore
   public void createAclsConsumer() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesAcls("Consumer");
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
 
-    String jsonReq = new ObjectMapper().writeValueAsString(topicRequest);
-
-    when(manageKafkaComponents.updateConsumerAcl(
-            topicRequest.get("topicName").get(0),
-            topicRequest.get("env").get(0),
-            topicRequest.get("protocol").get(0),
-            topicRequest.get("clusterName").get(0),
-            topicRequest.get("acl_ip").get(0),
-            topicRequest.get("acl_ssl").get(0),
-            topicRequest.get("consumerGroup").get(0),
-            "Create",
-            "false",
-            AclIPPrincipleType.PRINCIPLE.name(),
-            AclsNativeType.NATIVE.name()))
-        .thenReturn("success1");
+    when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest)).thenReturn("success1");
 
     String response =
         mvc.perform(
@@ -219,28 +196,16 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    // assertEquals("success", response);
-    assertThat(response, CoreMatchers.containsString("failure"));
+    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 
   @Test
   @Ignore
   public void createAclsConsumerFail() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesAcls("Consumer");
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
 
-    when(manageKafkaComponents.updateConsumerAcl(
-            topicRequest.get("topicName").get(0),
-            topicRequest.get("env").get(0),
-            topicRequest.get("protocol").get(0),
-            topicRequest.get("clusterName").get(0),
-            topicRequest.get("acl_ip").get(0),
-            topicRequest.get("acl_ssl").get(0),
-            topicRequest.get("consumerGroup").get(0),
-            "Create",
-            "false",
-            AclIPPrincipleType.PRINCIPLE.name(),
-            AclsNativeType.NATIVE.name()))
+    when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest))
         .thenThrow(new RuntimeException("Error creating acls"));
 
     String response =
@@ -253,16 +218,17 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertThat(response, CoreMatchers.containsString("failure"));
+    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 
   @Test
   public void postSchema() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesSchema();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterSchemaRequest);
 
-    when(schemaService.registerSchema(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn("success");
+    ApiResponse apiResponse = ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
+
+    when(schemaService.registerSchema(clusterSchemaRequest)).thenReturn(apiResponse);
 
     String response =
         mvc.perform(
@@ -274,16 +240,15 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    // assertEquals("Status:success", response);
-    assertThat(response, CoreMatchers.containsString("failure"));
+    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 
   @Test
   public void postSchemaFail() throws Exception {
-    MultiValueMap<String, String> topicRequest = utilMethods.getMappedValuesSchema();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterSchemaRequest);
 
-    when(schemaService.registerSchema(anyString(), anyString(), anyString(), anyString()))
+    when(schemaService.registerSchema(clusterSchemaRequest))
         .thenThrow(new RuntimeException("Error registering schema"));
 
     String response =
@@ -296,6 +261,6 @@ public class ClusterApiControllerTest {
             .getResponse()
             .getContentAsString();
 
-    assertThat(response, CoreMatchers.containsString("failure"));
+    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
   }
 }

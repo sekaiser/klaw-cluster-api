@@ -1,6 +1,8 @@
 package io.aiven.klaw.clusterapi.services;
 
-import io.aiven.klaw.clusterapi.models.ClusterResponseStatus;
+import io.aiven.klaw.clusterapi.models.ApiResponse;
+import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
+import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.KafkaClustersType;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
@@ -30,24 +32,22 @@ public class SchemaService {
     this.clusterApiUtils = clusterApiUtils;
   }
 
-  public synchronized String registerSchema(
-      String topicName, String schema, String environmentVal, String protocol) {
+  public synchronized ApiResponse registerSchema(ClusterSchemaRequest clusterSchemaRequest) {
     try {
-      log.info(
-          "Into register schema request TopicName:{} Env:{} Protocol:{}",
-          topicName,
-          environmentVal,
-          protocol);
-      if (environmentVal == null) return "Cannot retrieve SchemaRegistry Url";
-
+      log.info("Into register schema request {}", clusterSchemaRequest);
       //            set default compatibility
       //            setSchemaCompatibility(environmentVal, topicName, false, protocol);
-      String suffixUrl = environmentVal + "/subjects/" + topicName + "-value/versions";
+      String suffixUrl =
+          clusterSchemaRequest.getEnv()
+              + "/subjects/"
+              + clusterSchemaRequest.getTopicName()
+              + "-value/versions";
       Pair<String, RestTemplate> reqDetails =
-          clusterApiUtils.getRequestDetails(suffixUrl, protocol, KafkaClustersType.SCHEMA_REGISTRY);
+          clusterApiUtils.getRequestDetails(
+              suffixUrl, clusterSchemaRequest.getProtocol(), KafkaClustersType.SCHEMA_REGISTRY);
 
       Map<String, String> params = new HashMap<>();
-      params.put("schema", schema);
+      params.put("schema", clusterSchemaRequest.getFullSchema());
 
       HttpHeaders headers = new HttpHeaders();
       headers.set("Content-Type", SCHEMA_REGISTRY_CONTENT_TYPE);
@@ -58,13 +58,15 @@ public class SchemaService {
       String updateTopicReqStatus = responseNew.getBody();
       log.info(responseNew.getBody());
 
-      return updateTopicReqStatus;
+      return ApiResponse.builder().result(updateTopicReqStatus).build();
     } catch (Exception e) {
       log.error(e.getMessage());
       if (((HttpClientErrorException.Conflict) e).getStatusCode().value() == 409) {
-        return "Schema being registered is incompatible with an earlier schema";
+        return ApiResponse.builder()
+            .result("Schema being registered is incompatible with an earlier schema")
+            .build();
       }
-      return "Failure in registering schema.";
+      return ApiResponse.builder().result("Failure in registering schema.").build();
     }
   }
 
@@ -72,7 +74,9 @@ public class SchemaService {
       String environmentVal, String protocol, String topicName) {
     try {
       log.info("Into getSchema request {} {} {}", topicName, environmentVal, protocol);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       List<Integer> versionsList = getSchemaVersions(environmentVal, topicName, protocol);
       String schemaCompatibility = getSchemaCompatibility(environmentVal, topicName, protocol);
@@ -91,7 +95,9 @@ public class SchemaService {
           ResponseEntity<HashMap> responseNew =
               reqDetails.getRight().getForEntity(reqDetails.getLeft(), HashMap.class, params);
           Map<String, Object> schemaResponse = responseNew.getBody();
-          if (schemaResponse != null) schemaResponse.put("compatibility", schemaCompatibility);
+          if (schemaResponse != null) {
+            schemaResponse.put("compatibility", schemaCompatibility);
+          }
 
           log.info(Objects.requireNonNull(responseNew.getBody()).toString());
           allSchemaObjects.put(schemaVersion, schemaResponse);
@@ -109,7 +115,9 @@ public class SchemaService {
       String environmentVal, String topicName, String protocol) {
     try {
       log.info("Into getSchema versions {} {}", topicName, environmentVal);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       String suffixUrl = environmentVal + "/subjects/" + topicName + "-value/versions";
       Pair<String, RestTemplate> reqDetails =
@@ -130,7 +138,9 @@ public class SchemaService {
   private String getSchemaCompatibility(String environmentVal, String topicName, String protocol) {
     try {
       log.info("Into getSchema compatibility {} {}", topicName, environmentVal);
-      if (environmentVal == null) return null;
+      if (environmentVal == null) {
+        return null;
+      }
 
       String suffixUrl = environmentVal + "/config/" + topicName + "-value";
       Pair<String, RestTemplate> reqDetails =
@@ -152,15 +162,18 @@ public class SchemaService {
       String environmentVal, String topicName, boolean isForce, String protocol) {
     try {
       log.info("Into setSchema compatibility {} {}", topicName, environmentVal);
-      if (environmentVal == null) return false;
+      if (environmentVal == null) {
+        return false;
+      }
 
       String suffixUrl = environmentVal + "/config/" + topicName + "-value";
       Pair<String, RestTemplate> reqDetails =
           clusterApiUtils.getRequestDetails(suffixUrl, protocol, KafkaClustersType.SCHEMA_REGISTRY);
 
       Map<String, String> params = new HashMap<>();
-      if (isForce) params.put("compatibility", "NONE");
-      else params.put("compatibility", defaultSchemaCompatibility);
+      if (isForce) {
+        params.put("compatibility", "NONE");
+      } else params.put("compatibility", defaultSchemaCompatibility);
 
       HttpHeaders headers = new HttpHeaders();
       headers.set("Content-Type", SCHEMA_REGISTRY_CONTENT_TYPE);
@@ -173,7 +186,7 @@ public class SchemaService {
     }
   }
 
-  protected String getSchemaRegistryStatus(String environmentVal, String protocol) {
+  protected ClusterStatus getSchemaRegistryStatus(String environmentVal, String protocol) {
 
     String suffixUrl = environmentVal + "/subjects";
     Pair<String, RestTemplate> reqDetails =
@@ -183,10 +196,10 @@ public class SchemaService {
 
     try {
       reqDetails.getRight().getForEntity(reqDetails.getLeft(), Object.class, params);
-      return ClusterResponseStatus.ONLINE.value;
+      return ClusterStatus.ONLINE;
     } catch (RestClientException e) {
       e.printStackTrace();
-      return ClusterResponseStatus.OFFLINE.value;
+      return ClusterStatus.OFFLINE;
     }
   }
 }

@@ -1,12 +1,11 @@
 package io.aiven.klaw.clusterapi.services;
 
+import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AivenApiServiceTest {
@@ -29,25 +28,29 @@ public class AivenApiServiceTest {
   @Test
   public void createAclsTest() throws Exception {
     // TODO when, asserts
-    MultiValueMap<String, String> linkedHashMap = new LinkedMultiValueMap<>();
-    linkedHashMap.add("permission", "read");
-    linkedHashMap.add("topic", "testtopic");
-    linkedHashMap.add("username", "avnadmin");
-    linkedHashMap.add("projectName", "testproject");
-    linkedHashMap.add("serviceName", "serviceName");
+    ClusterAclRequest clusterAclRequest =
+        ClusterAclRequest.builder()
+            .permission("read")
+            .topicName("testtopic")
+            .username("avnadmin")
+            .projectName("testproject")
+            .serviceName("serviceName")
+            .build();
 
-    aivenApiService.createAcls(linkedHashMap);
+    aivenApiService.createAcls(clusterAclRequest);
   }
 
   @Ignore
   @Test
   public void deleteAclsTest() throws Exception {
     // TODO when, asserts
-    MultiValueMap<String, String> linkedHashMap = new LinkedMultiValueMap<>();
-    linkedHashMap.add("aclId", "12345abcdef");
-    linkedHashMap.add("projectName", "testproject");
-    linkedHashMap.add("serviceName", "serviceName");
+    ClusterAclRequest clusterAclRequest =
+        ClusterAclRequest.builder()
+            .aivenAclKey("4322342")
+            .projectName("testproject")
+            .serviceName("serviceName")
+            .build();
 
-    aivenApiService.deleteAcls(linkedHashMap);
+    aivenApiService.deleteAcls(clusterAclRequest);
   }
 }

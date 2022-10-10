@@ -1,12 +1,13 @@
 package io.aiven.klaw.clusterapi.models;
 
-public enum ClusterResponseStatus {
+public enum ClusterStatus {
+  OFFLINE("OFFLINE"),
   ONLINE("ONLINE"),
-  OFFLINE("OFFLINE");
+  NOT_KNOWN("NOT_KNOWN");
 
   public final String value;
 
-  private ClusterResponseStatus(String value) {
+  ClusterStatus(String value) {
     this.value = value;
   }
 }

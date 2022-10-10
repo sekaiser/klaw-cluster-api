@@ -17,8 +17,6 @@ public class MetricsApiController {
   @Autowired MetricsApiService metricsApiService;
 
   @PostMapping(value = "/getMetrics")
-  //    public ResponseEntity<HashMap<String, String>> getMetrics(@PathVariable String jmxUrl,
-  // @PathVariable String objectName) throws Exception {
   public ResponseEntity<HashMap<String, String>> getMetrics(
       @RequestBody MultiValueMap<String, String> metricsRequest) throws Exception {
     String metricsObjectName = "kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec";
