@@ -49,7 +49,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <kafka.client.version>3.2.1</kafka.client.version>
         <maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
+        <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
         <jasyptencrypt.version>3.0.4</jasyptencrypt.version>
         <apachehttp.version>4.5.13</apachehttp.version>
         <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
