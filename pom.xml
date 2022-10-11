@@ -54,7 +54,7 @@
         <apachehttp.version>4.5.13</apachehttp.version>
         <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
         <google-java-format.version>1.15.0</google-java-format.version>
-        <spotless-maven-plugin.version>2.23.0</spotless-maven-plugin.version>
+        <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
         <powermock-module-junit4.version>2.0.9</powermock-module-junit4.version>
         <spring-kafka-test.version>2.9.1</spring-kafka-test.version>
         <powermock-api-mockito2.version>2.0.9</powermock-api-mockito2.version>
