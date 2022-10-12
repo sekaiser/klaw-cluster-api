@@ -79,13 +79,13 @@ public class ClusterApiUtils {
     return new String(Base64.getEncoder().encode(messageDigest.digest(envHost.getBytes())));
   }
 
-  public AdminClient getAdminClient(String envHost, String protocol, String clusterNameTenantId)
+  public AdminClient getAdminClient(String envHost, String protocol, String clusterIdentification)
       throws Exception {
     log.info(
-        "Host : {} Protocol {} clusterNameTenantId {}", envHost, protocol, clusterNameTenantId);
+        "Host : {} Protocol {} clusterIdentification {}", envHost, protocol, clusterIdentification);
 
     AdminClient adminClient = null;
-    String adminClientKey = protocol + clusterNameTenantId + getHash(envHost);
+    String adminClientKey = protocol + clusterIdentification + getHash(envHost);
 
     try {
       switch (protocol) {
@@ -99,7 +99,7 @@ public class ClusterApiUtils {
 
         case "SSL":
           if (!adminClientsMap.containsKey(adminClientKey)) {
-            adminClient = AdminClient.create(getSslProperties(envHost, clusterNameTenantId));
+            adminClient = AdminClient.create(getSslProperties(envHost, clusterIdentification));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
@@ -107,7 +107,7 @@ public class ClusterApiUtils {
 
         case "SASL_PLAIN":
           if (!adminClientsMap.containsKey(adminClientKey)) {
-            adminClient = AdminClient.create(getSaslPlainProperties(envHost, clusterNameTenantId));
+            adminClient = AdminClient.create(getSaslPlainProperties(envHost, clusterIdentification));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
@@ -117,7 +117,7 @@ public class ClusterApiUtils {
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
-                    getSaslSsl_PlainMechanismProperties(envHost, clusterNameTenantId));
+                    getSaslSsl_PlainMechanismProperties(envHost, clusterIdentification));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
@@ -128,7 +128,7 @@ public class ClusterApiUtils {
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
-                    getSaslSsl_ScramMechanismProperties(envHost, clusterNameTenantId));
+                    getSaslSsl_ScramMechanismProperties(envHost, clusterIdentification));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
@@ -139,7 +139,7 @@ public class ClusterApiUtils {
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
-                    getSaslSsl_GSSAPIMechanismProperties(envHost, clusterNameTenantId));
+                    getSaslSsl_GSSAPIMechanismProperties(envHost, clusterIdentification));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
@@ -165,7 +165,7 @@ public class ClusterApiUtils {
     } catch (Exception e) {
       adminClientsMap.remove(adminClientKey);
       adminClient.close();
-      log.error("Cannot create Admin Client {} {} {}", envHost, protocol, clusterNameTenantId);
+      log.error("Cannot create Admin Client {} {} {}", envHost, protocol, clusterIdentification);
       throw new Exception("Cannot connect to cluster. Please contact Administrator.");
     }
   }
@@ -179,8 +179,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSslProperties(String environment, String clusterName) {
-    Properties props = getSslConfig(clusterName);
+  public Properties getSslProperties(String environment, String clusterIdentification) {
+    Properties props = getSslConfig(clusterIdentification);
 
     props.put("bootstrap.servers", environment);
     props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
@@ -190,7 +190,7 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslPlainProperties(String environment, String clusterName) {
+  public Properties getSaslPlainProperties(String environment, String clusterIdentification) {
     Properties props = new Properties();
 
     props.put("bootstrap.servers", environment);
@@ -205,10 +205,10 @@ public class ClusterApiUtils {
       }
 
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.plain"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.plain"))) {
         props.put(
             SaslConfigs.SASL_JAAS_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.plain"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.plain"));
       }
 
     } catch (Exception exception) {
@@ -218,8 +218,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslSsl_PlainMechanismProperties(String environment, String clusterName) {
-    Properties props = getSslConfig(clusterName);
+  public Properties getSaslSsl_PlainMechanismProperties(String environment, String clusterIdentification) {
+    Properties props = getSslConfig(clusterIdentification);
 
     try {
       props.put("bootstrap.servers", environment);
@@ -231,10 +231,10 @@ public class ClusterApiUtils {
         props.put(SaslConfigs.SASL_MECHANISM, env.getProperty("kafkasasl.saslmechanism.plain"));
       }
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.plain"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.plain"))) {
         props.put(
             SaslConfigs.SASL_JAAS_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.plain"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.plain"));
       }
     } catch (Exception exception) {
       log.error("Error : Cannot set SASL SSL PLAIN Config properties.");
@@ -243,8 +243,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslSsl_ScramMechanismProperties(String environment, String clusterName) {
-    Properties props = getSslConfig(clusterName);
+  public Properties getSaslSsl_ScramMechanismProperties(String environment, String clusterIdentification) {
+    Properties props = getSslConfig(clusterIdentification);
 
     try {
       props.put("bootstrap.servers", environment);
@@ -256,10 +256,10 @@ public class ClusterApiUtils {
         props.put(SaslConfigs.SASL_MECHANISM, env.getProperty("kafkasasl.saslmechanism.scram"));
       }
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.scram"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.scram"))) {
         props.put(
             SaslConfigs.SASL_JAAS_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.scram"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.scram"));
       }
     } catch (Exception exception) {
       log.error("Error : Cannot set SASL SSL SCRAM Config properties.");
@@ -268,8 +268,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslSsl_GSSAPIMechanismProperties(String environment, String clusterName) {
-    Properties props = getSslConfig(clusterName);
+  public Properties getSaslSsl_GSSAPIMechanismProperties(String environment, String clusterIdentification) {
+    Properties props = getSslConfig(clusterIdentification);
 
     try {
       props.put("bootstrap.servers", environment);
@@ -282,19 +282,19 @@ public class ClusterApiUtils {
       }
 
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.gssapi"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.gssapi"))) {
         props.put(
             SaslConfigs.SASL_JAAS_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkasasl.jaasconfig.gssapi"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.gssapi"));
       }
 
       if (!Strings.isNullOrEmpty(
           env.getProperty(
-              clusterName.toLowerCase() + ".kafkasasl.saslmechanism.gssapi.servicename"))) {
+              clusterIdentification.toLowerCase() + ".kafkasasl.saslmechanism.gssapi.servicename"))) {
         props.put(
             SaslConfigs.SASL_KERBEROS_SERVICE_NAME,
             env.getProperty(
-                clusterName.toLowerCase() + ".kafkasasl.saslmechanism.gssapi.servicename"));
+                clusterIdentification.toLowerCase() + ".kafkasasl.saslmechanism.gssapi.servicename"));
       }
     } catch (Exception exception) {
       log.error("Error : Cannot set SASL SSL GSSAPI Config properties.");
@@ -303,60 +303,57 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSslConfig(String clusterName) {
-    //        if(kwInstallationType.equals("saas"))
-    clusterName = "klawssl";
-
+  public Properties getSslConfig(String clusterIdentification) {
     Properties props = new Properties();
 
     try {
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.keystore.location"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.keystore.location"))) {
         props.put(
             SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.keystore.location"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.keystore.location"));
       }
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.keystore.pwd"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.keystore.pwd"))) {
         props.put(
             SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.keystore.pwd"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.keystore.pwd"));
       }
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.key.pwd"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.key.pwd"))) {
         props.put(
             SslConfigs.SSL_KEY_PASSWORD_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.key.pwd"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.key.pwd"));
       }
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.keystore.type"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.keystore.type"))) {
         props.put(
             SslConfigs.SSL_KEYSTORE_TYPE_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.keystore.type"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.keystore.type"));
       } else {
         props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
       }
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.truststore.type"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.truststore.type"))) {
         props.put(
             SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.truststore.type"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.truststore.type"));
       } else {
         props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "JKS");
       }
 
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.truststore.location"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.truststore.location"))) {
         props.put(
             SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.truststore.location"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.truststore.location"));
       }
 
       if (!Strings.isNullOrEmpty(
-          env.getProperty(clusterName.toLowerCase() + ".kafkassl.truststore.pwd"))) {
+          env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.truststore.pwd"))) {
         props.put(
             SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
-            env.getProperty(clusterName.toLowerCase() + ".kafkassl.truststore.pwd"));
+            env.getProperty(clusterIdentification.toLowerCase() + ".kafkassl.truststore.pwd"));
       }
 
       props.put("ssl.enabled.protocols", "TLSv1.2,TLSv1.1");
