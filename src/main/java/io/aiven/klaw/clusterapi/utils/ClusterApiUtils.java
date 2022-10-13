@@ -107,7 +107,8 @@ public class ClusterApiUtils {
 
         case "SASL_PLAIN":
           if (!adminClientsMap.containsKey(adminClientKey)) {
-            adminClient = AdminClient.create(getSaslPlainProperties(envHost, clusterIdentification));
+            adminClient =
+                AdminClient.create(getSaslPlainProperties(envHost, clusterIdentification));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
@@ -218,7 +219,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslSsl_PlainMechanismProperties(String environment, String clusterIdentification) {
+  public Properties getSaslSsl_PlainMechanismProperties(
+      String environment, String clusterIdentification) {
     Properties props = getSslConfig(clusterIdentification);
 
     try {
@@ -243,7 +245,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslSsl_ScramMechanismProperties(String environment, String clusterIdentification) {
+  public Properties getSaslSsl_ScramMechanismProperties(
+      String environment, String clusterIdentification) {
     Properties props = getSslConfig(clusterIdentification);
 
     try {
@@ -268,7 +271,8 @@ public class ClusterApiUtils {
     return props;
   }
 
-  public Properties getSaslSsl_GSSAPIMechanismProperties(String environment, String clusterIdentification) {
+  public Properties getSaslSsl_GSSAPIMechanismProperties(
+      String environment, String clusterIdentification) {
     Properties props = getSslConfig(clusterIdentification);
 
     try {
@@ -290,11 +294,13 @@ public class ClusterApiUtils {
 
       if (!Strings.isNullOrEmpty(
           env.getProperty(
-              clusterIdentification.toLowerCase() + ".kafkasasl.saslmechanism.gssapi.servicename"))) {
+              clusterIdentification.toLowerCase()
+                  + ".kafkasasl.saslmechanism.gssapi.servicename"))) {
         props.put(
             SaslConfigs.SASL_KERBEROS_SERVICE_NAME,
             env.getProperty(
-                clusterIdentification.toLowerCase() + ".kafkasasl.saslmechanism.gssapi.servicename"));
+                clusterIdentification.toLowerCase()
+                    + ".kafkasasl.saslmechanism.gssapi.servicename"));
       }
     } catch (Exception exception) {
       log.error("Error : Cannot set SASL SSL GSSAPI Config properties.");
