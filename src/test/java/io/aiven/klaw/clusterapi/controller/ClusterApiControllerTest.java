@@ -14,6 +14,7 @@ import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
 import io.aiven.klaw.clusterapi.services.SchemaService;
@@ -75,7 +76,7 @@ public class ClusterApiControllerTest {
   @Ignore
   public void getStatus() throws Exception {
     String env = "DEV";
-    when(utilComponentsService.getStatus(env, "PLAINTEXT", "", ""))
+    when(utilComponentsService.getStatus(env, KafkaSupportedProtocol.PLAINTEXT, "", ""))
         .thenReturn(ClusterStatus.ONLINE);
 
     String res =
@@ -95,7 +96,7 @@ public class ClusterApiControllerTest {
   @Ignore
   public void getTopics() throws Exception {
     String env = "DEV";
-    when(apacheKafkaTopicService.loadTopics(env, "PLAINTEXT", ""))
+    when(apacheKafkaTopicService.loadTopics(env, KafkaSupportedProtocol.PLAINTEXT, ""))
         .thenReturn(utilMethods.getTopics());
 
     String res =
@@ -116,7 +117,8 @@ public class ClusterApiControllerTest {
   @Ignore
   public void getAcls() throws Exception {
     String env = "DEV";
-    when(apacheKafkaAclService.loadAcls(env, "PLAINTEXT", "")).thenReturn(utilMethods.getAcls());
+    when(apacheKafkaAclService.loadAcls(env, KafkaSupportedProtocol.PLAINTEXT, ""))
+        .thenReturn(utilMethods.getAcls());
 
     String res =
         mvc.perform(

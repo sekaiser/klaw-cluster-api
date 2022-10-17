@@ -1,5 +1,6 @@
 package io.aiven.klaw.clusterapi.services;
 
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class MonitoringService {
       String consumerGroupId,
       String topicName,
       String environment,
-      String protocol,
+      KafkaSupportedProtocol protocol,
       String clusterName)
       throws Exception {
     log.info(

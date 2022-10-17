@@ -13,7 +13,7 @@ public class ClusterTopicRequest {
 
   @JsonProperty private short replicationFactor;
 
-  @JsonProperty private String protocol;
+  @JsonProperty private KafkaSupportedProtocol protocol;
 
   @JsonProperty private String clusterName;
 

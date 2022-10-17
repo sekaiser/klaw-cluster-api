@@ -4,6 +4,7 @@ import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.KafkaClustersType;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +72,7 @@ public class SchemaService {
   }
 
   public Map<Integer, Map<String, Object>> getSchema(
-      String environmentVal, String protocol, String topicName) {
+      String environmentVal, KafkaSupportedProtocol protocol, String topicName) {
     try {
       log.info("Into getSchema request {} {} {}", topicName, environmentVal, protocol);
       if (environmentVal == null) {
@@ -112,7 +113,7 @@ public class SchemaService {
   }
 
   private List<Integer> getSchemaVersions(
-      String environmentVal, String topicName, String protocol) {
+      String environmentVal, String topicName, KafkaSupportedProtocol protocol) {
     try {
       log.info("Into getSchema versions {} {}", topicName, environmentVal);
       if (environmentVal == null) {
@@ -135,7 +136,8 @@ public class SchemaService {
     }
   }
 
-  private String getSchemaCompatibility(String environmentVal, String topicName, String protocol) {
+  private String getSchemaCompatibility(
+      String environmentVal, String topicName, KafkaSupportedProtocol protocol) {
     try {
       log.info("Into getSchema compatibility {} {}", topicName, environmentVal);
       if (environmentVal == null) {
@@ -159,7 +161,7 @@ public class SchemaService {
   }
 
   private boolean setSchemaCompatibility(
-      String environmentVal, String topicName, boolean isForce, String protocol) {
+      String environmentVal, String topicName, boolean isForce, KafkaSupportedProtocol protocol) {
     try {
       log.info("Into setSchema compatibility {} {}", topicName, environmentVal);
       if (environmentVal == null) {
@@ -186,7 +188,8 @@ public class SchemaService {
     }
   }
 
-  protected ClusterStatus getSchemaRegistryStatus(String environmentVal, String protocol) {
+  protected ClusterStatus getSchemaRegistryStatus(
+      String environmentVal, KafkaSupportedProtocol protocol) {
 
     String suffixUrl = environmentVal + "/subjects";
     Pair<String, RestTemplate> reqDetails =

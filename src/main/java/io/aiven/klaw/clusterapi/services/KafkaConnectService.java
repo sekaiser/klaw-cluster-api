@@ -5,6 +5,7 @@ import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterConnectorRequest;
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.KafkaClustersType;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +110,7 @@ public class KafkaConnectService {
     }
   }
 
-  public List<String> getConnectors(String environmentVal, String protocol) {
+  public List<String> getConnectors(String environmentVal, KafkaSupportedProtocol protocol) {
     try {
       log.info("Into getConnectors {} {}", environmentVal, protocol);
       if (environmentVal == null) {
@@ -133,7 +134,7 @@ public class KafkaConnectService {
   }
 
   public LinkedHashMap<String, Object> getConnectorDetails(
-      String connector, String environmentVal, String protocol) {
+      String connector, String environmentVal, KafkaSupportedProtocol protocol) {
     try {
       log.info("Into getConnectorDetails {} {}", environmentVal, protocol);
       if (environmentVal == null) {
@@ -157,7 +158,8 @@ public class KafkaConnectService {
     }
   }
 
-  protected ClusterStatus getKafkaConnectStatus(String environment, String protocol) {
+  protected ClusterStatus getKafkaConnectStatus(
+      String environment, KafkaSupportedProtocol protocol) {
     String suffixUrl = environment + "/connectors";
     Pair<String, RestTemplate> reqDetails =
         clusterApiUtils.getRequestDetails(suffixUrl, protocol, KafkaClustersType.KAFKA_CONNECT);

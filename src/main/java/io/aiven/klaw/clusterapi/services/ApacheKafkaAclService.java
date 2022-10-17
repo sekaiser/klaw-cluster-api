@@ -4,6 +4,7 @@ import io.aiven.klaw.clusterapi.models.AclIPPrincipleType;
 import io.aiven.klaw.clusterapi.models.AclPatternType;
 import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.models.RequestOperationType;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class ApacheKafkaAclService {
   }
 
   public synchronized Set<Map<String, String>> loadAcls(
-      String environment, String protocol, String clusterName) throws Exception {
+      String environment, KafkaSupportedProtocol protocol, String clusterName) throws Exception {
     log.info("loadAcls {} {}", environment, protocol);
     Set<Map<String, String>> acls = new HashSet<>();
 

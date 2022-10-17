@@ -2,6 +2,7 @@ package io.aiven.klaw.clusterapi.controller;
 
 import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ClusterConnectorRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.services.KafkaConnectService;
 import java.util.*;
 import javax.validation.Valid;
@@ -24,7 +25,7 @@ public class KafkaConnectController {
       method = RequestMethod.GET,
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<List<String>> getAllConnectors(
-      @PathVariable String kafkaConnectHost, @PathVariable String protocol) {
+      @PathVariable String kafkaConnectHost, @Valid @PathVariable KafkaSupportedProtocol protocol) {
     return new ResponseEntity<>(
         kafkaConnectService.getConnectors(kafkaConnectHost, protocol), HttpStatus.OK);
   }
@@ -36,7 +37,7 @@ public class KafkaConnectController {
   public ResponseEntity<LinkedHashMap<String, Object>> getConnectorDetails(
       @PathVariable String connectorName,
       @PathVariable String kafkaConnectHost,
-      @PathVariable String protocol) {
+      @Valid @PathVariable KafkaSupportedProtocol protocol) {
     return new ResponseEntity<>(
         kafkaConnectService.getConnectorDetails(connectorName, kafkaConnectHost, protocol),
         HttpStatus.OK);

@@ -14,6 +14,7 @@ import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.*;
 import org.apache.kafka.clients.admin.*;
@@ -91,23 +92,26 @@ public class UtilComponentsServiceTest {
   public void getStatusOnline() throws Exception {
     Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
 
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
-    ClusterStatus result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
+    ClusterStatus result =
+        utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
     assertEquals(ClusterStatus.ONLINE, result);
   }
 
   @Test
   public void getStatusOffline1() {
 
-    ClusterStatus result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
+    ClusterStatus result =
+        utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
     assertEquals(ClusterStatus.OFFLINE, result);
   }
 
   @Test
   public void getStatusOffline2() {
 
-    ClusterStatus result = utilComponentsService.getStatus("localhost", "PLAINTEXT", "", "");
+    ClusterStatus result =
+        utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
     assertEquals(ClusterStatus.OFFLINE, result);
   }
 
@@ -116,7 +120,7 @@ public class UtilComponentsServiceTest {
   public void loadAcls1() throws Exception {
     List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
     when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
@@ -125,7 +129,8 @@ public class UtilComponentsServiceTest {
     when(accessControlEntry.operation()).thenReturn(AclOperation.READ);
     when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
 
-    Set<Map<String, String>> result = apacheKafkaAclService.loadAcls("localhost", "PLAINTEXT", "");
+    Set<Map<String, String>> result =
+        apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
     assertEquals(1, result.size());
   }
 
@@ -134,7 +139,7 @@ public class UtilComponentsServiceTest {
   public void loadAcls2() throws Exception {
     List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
     when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
@@ -143,17 +148,19 @@ public class UtilComponentsServiceTest {
     when(accessControlEntry.operation()).thenReturn(AclOperation.CREATE);
     when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
 
-    Set<Map<String, String>> result = apacheKafkaAclService.loadAcls("localhost", "PLAINTEXT", "");
+    Set<Map<String, String>> result =
+        apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
     assertEquals(0, result.size());
   }
 
   @Test
   public void loadAcls3() throws Exception {
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.describeAcls(any())).thenThrow(new RuntimeException("Describe Acls Error"));
 
-    Set<Map<String, String>> result = apacheKafkaAclService.loadAcls("localhost", "PLAINTEXT", "");
+    Set<Map<String, String>> result =
+        apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
     assertEquals(0, result.size());
   }
 
@@ -162,7 +169,7 @@ public class UtilComponentsServiceTest {
   public void loadTopics() throws Exception {
     Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
     Set<String> list = new HashSet<>();
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.listTopics()).thenReturn(listTopicsResult);
     when(listTopicsResult.names()).thenReturn(kafkaFuture);
@@ -173,7 +180,7 @@ public class UtilComponentsServiceTest {
     when(kafkaFutureTopicdesc.get()).thenReturn(getTopicDescs());
 
     Set<HashMap<String, String>> result =
-        apacheKafkaTopicService.loadTopics("localhost", "PLAINTEXT", "");
+        apacheKafkaTopicService.loadTopics("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
 
     HashMap<String, String> hashMap = new HashMap<>();
     hashMap.put("partitions", "2");
@@ -196,14 +203,15 @@ public class UtilComponentsServiceTest {
     ClusterTopicRequest clusterTopicRequest =
         ClusterTopicRequest.builder()
             .env("localhost")
-            .protocol("PLAINTEXT")
+            .protocol(KafkaSupportedProtocol.PLAINTEXT)
             .topicName("testtopic")
             .partitions(1)
             .replicationFactor(Short.parseShort("1"))
             .clusterName("")
             .build();
 
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), "")).thenReturn(adminClient);
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), ""))
+        .thenReturn(adminClient);
     when(adminClient.createTopics(any())).thenReturn(createTopicsResult);
     when(createTopicsResult.values()).thenReturn(futureTocpiCreateResult);
     when(futureTocpiCreateResult.get(anyString())).thenReturn(kFutureVoid);
@@ -217,14 +225,15 @@ public class UtilComponentsServiceTest {
     ClusterTopicRequest clusterTopicRequest =
         ClusterTopicRequest.builder()
             .env("localhost")
-            .protocol("PLAINTEXT")
+            .protocol(KafkaSupportedProtocol.PLAINTEXT)
             .topicName("testtopic")
             .partitions(1)
             .replicationFactor(Short.parseShort("1"))
             .clusterName("")
             .build();
 
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString())).thenReturn(null);
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+        .thenReturn(null);
 
     apacheKafkaTopicService.createTopic(clusterTopicRequest);
   }
@@ -234,13 +243,13 @@ public class UtilComponentsServiceTest {
     ClusterTopicRequest clusterTopicRequest =
         ClusterTopicRequest.builder()
             .env("localhost")
-            .protocol("PLAINTEXT")
+            .protocol(KafkaSupportedProtocol.PLAINTEXT)
             .topicName("testtopic")
             .partitions(1)
             .replicationFactor(Short.parseShort("1aa"))
             .clusterName("")
             .build();
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
 
     apacheKafkaTopicService.createTopic(clusterTopicRequest);
@@ -251,13 +260,13 @@ public class UtilComponentsServiceTest {
     ClusterTopicRequest clusterTopicRequest =
         ClusterTopicRequest.builder()
             .env("localhost")
-            .protocol("PLAINTEXT")
+            .protocol(KafkaSupportedProtocol.PLAINTEXT)
             .topicName("testtopic1")
             .partitions(1)
             .replicationFactor(Short.parseShort("1aa"))
             .clusterName("")
             .build();
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createTopics(any())).thenThrow(new RuntimeException("Runtime exption"));
 
@@ -268,7 +277,7 @@ public class UtilComponentsServiceTest {
   @Ignore
   public void createProducerAcl1() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
@@ -280,7 +289,7 @@ public class UtilComponentsServiceTest {
   @Ignore
   public void createProducerAcl2() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
@@ -292,7 +301,7 @@ public class UtilComponentsServiceTest {
   @Ignore
   public void createConsumerAcl1() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
@@ -304,7 +313,7 @@ public class UtilComponentsServiceTest {
   @Ignore
   public void createConsumerAcl2() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq("PLAINTEXT"), anyString()))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 

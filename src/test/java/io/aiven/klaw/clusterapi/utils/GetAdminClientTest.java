@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
@@ -61,7 +62,8 @@ public class GetAdminClientTest {
     when(adminClientsMap.containsKey(envHost)).thenReturn(false);
     BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
 
-    AdminClient result = getAdminClient.getAdminClient(envHost, "PLAINTEXT", "");
+    AdminClient result =
+        getAdminClient.getAdminClient(envHost, KafkaSupportedProtocol.PLAINTEXT, "");
     assertNotNull(result);
   }
 
@@ -77,7 +79,8 @@ public class GetAdminClientTest {
     when(kafkaFuture.get()).thenReturn(setStr);
     BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
 
-    AdminClient result = getAdminClient.getAdminClient("localhost:9092", "PLAINTEXT", "");
+    AdminClient result =
+        getAdminClient.getAdminClient("localhost:9092", KafkaSupportedProtocol.PLAINTEXT, "");
     assertNotNull(result);
   }
 
@@ -93,7 +96,8 @@ public class GetAdminClientTest {
     Set<String> setStr = new HashSet<>();
     when(kafkaFuture.get()).thenReturn(setStr);
 
-    AdminClient result = getAdminClient.getAdminClient("localhost:9092", "PLAINTEXT", "");
+    AdminClient result =
+        getAdminClient.getAdminClient("localhost:9092", KafkaSupportedProtocol.PLAINTEXT, "");
     assertNotNull(result);
   }
 
