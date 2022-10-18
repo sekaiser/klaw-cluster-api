@@ -407,10 +407,10 @@ public class ClusterApiUtils {
     RestTemplate restTemplate;
     String connectorsUrl = "";
 
-    if (PLAINTEXT.equals(protocol)) {
+    if (PLAINTEXT == protocol) {
       connectorsUrl = HTTP_PREFIX + suffixUrl;
       restTemplate = new RestTemplate();
-    } else if (SSL.equals(protocol)) {
+    } else if (SSL == protocol) {
       if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType)) {
         connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + suffixUrl;
       } else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType)) {
