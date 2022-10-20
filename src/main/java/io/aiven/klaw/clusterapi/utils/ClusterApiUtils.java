@@ -1,9 +1,11 @@
 package io.aiven.klaw.clusterapi.utils;
 
+import static io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol.*;
+
 import com.google.common.base.Strings;
 import io.aiven.klaw.clusterapi.config.SslContextConfig;
 import io.aiven.klaw.clusterapi.models.KafkaClustersType;
-import io.aiven.klaw.clusterapi.models.KafkaProtocols;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -27,6 +29,8 @@ public class ClusterApiUtils {
 
   public static final String HTTPS_PREFIX = "https://";
   public static final String HTTP_PREFIX = "http://";
+  public static final String SHA_256 = "SHA_256";
+  public static final String SHA_512 = "SHA_512";
 
   final Environment env;
 
@@ -79,7 +83,8 @@ public class ClusterApiUtils {
     return new String(Base64.getEncoder().encode(messageDigest.digest(envHost.getBytes())));
   }
 
-  public AdminClient getAdminClient(String envHost, String protocol, String clusterIdentification)
+  public AdminClient getAdminClient(
+      String envHost, KafkaSupportedProtocol protocol, String clusterIdentification)
       throws Exception {
     log.info(
         "Host : {} Protocol {} clusterIdentification {}", envHost, protocol, clusterIdentification);
@@ -89,7 +94,7 @@ public class ClusterApiUtils {
 
     try {
       switch (protocol) {
-        case "PLAINTEXT":
+        case PLAINTEXT:
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient = AdminClient.create(getPlainProperties(envHost));
           } else {
@@ -97,7 +102,7 @@ public class ClusterApiUtils {
           }
           break;
 
-        case "SSL":
+        case SSL:
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient = AdminClient.create(getSslProperties(envHost, clusterIdentification));
           } else {
@@ -105,7 +110,7 @@ public class ClusterApiUtils {
           }
           break;
 
-        case "SASL_PLAIN":
+        case SASL_PLAIN:
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(getSaslPlainProperties(envHost, clusterIdentification));
@@ -114,7 +119,7 @@ public class ClusterApiUtils {
           }
           break;
 
-        case "SASL_SSL-PLAINMECHANISM":
+        case SASL_SSL_PLAIN_MECHANISM:
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
@@ -125,18 +130,29 @@ public class ClusterApiUtils {
 
           break;
 
-        case "SASL_SSL-SCRAMMECHANISM":
+        case SASL_SSL_SCRAM_MECHANISM_256:
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
-                    getSaslSsl_ScramMechanismProperties(envHost, clusterIdentification));
+                    getSaslSsl_ScramMechanismProperties(envHost, clusterIdentification, SHA_256));
           } else {
             adminClient = adminClientsMap.get(adminClientKey);
           }
 
           break;
 
-        case "SASL_SSL-GSSAPIMECHANISM":
+        case SASL_SSL_SCRAM_MECHANISM_512:
+          if (!adminClientsMap.containsKey(adminClientKey)) {
+            adminClient =
+                AdminClient.create(
+                    getSaslSsl_ScramMechanismProperties(envHost, clusterIdentification, SHA_512));
+          } else {
+            adminClient = adminClientsMap.get(adminClientKey);
+          }
+
+          break;
+
+        case SASL_SSL_GSSAPI_MECHANISM:
           if (!adminClientsMap.containsKey(adminClientKey)) {
             adminClient =
                 AdminClient.create(
@@ -246,7 +262,7 @@ public class ClusterApiUtils {
   }
 
   public Properties getSaslSsl_ScramMechanismProperties(
-      String environment, String clusterIdentification) {
+      String environment, String clusterIdentification, String algorithm) {
     Properties props = getSslConfig(clusterIdentification);
 
     try {
@@ -255,9 +271,18 @@ public class ClusterApiUtils {
       props.put(AdminClientConfig.CLIENT_ID_CONFIG, "klawclientsaslsslscram");
       setOtherConfig(props);
 
-      if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.scram"))) {
-        props.put(SaslConfigs.SASL_MECHANISM, env.getProperty("kafkasasl.saslmechanism.scram"));
+      if (SHA_256.equals(algorithm)) {
+        if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.scram.256"))) {
+          props.put(
+              SaslConfigs.SASL_MECHANISM, env.getProperty("kafkasasl.saslmechanism.scram.256"));
+        }
+      } else if (SHA_512.equals(algorithm)) {
+        if (!Strings.isNullOrEmpty(env.getProperty("kafkasasl.saslmechanism.scram.512"))) {
+          props.put(
+              SaslConfigs.SASL_MECHANISM, env.getProperty("kafkasasl.saslmechanism.scram.512"));
+        }
       }
+
       if (!Strings.isNullOrEmpty(
           env.getProperty(clusterIdentification.toLowerCase() + ".kafkasasl.jaasconfig.scram"))) {
         props.put(
@@ -378,14 +403,14 @@ public class ClusterApiUtils {
   }
 
   public Pair<String, RestTemplate> getRequestDetails(
-      String suffixUrl, String protocol, KafkaClustersType kafkaClustersType) {
+      String suffixUrl, KafkaSupportedProtocol protocol, KafkaClustersType kafkaClustersType) {
     RestTemplate restTemplate;
     String connectorsUrl = "";
 
-    if (KafkaProtocols.PLAINTEXT.name().equals(protocol)) {
+    if (PLAINTEXT == protocol) {
       connectorsUrl = HTTP_PREFIX + suffixUrl;
       restTemplate = new RestTemplate();
-    } else if (KafkaProtocols.SSL.name().equals(protocol)) {
+    } else if (SSL == protocol) {
       if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType)) {
         connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + suffixUrl;
       } else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType)) {

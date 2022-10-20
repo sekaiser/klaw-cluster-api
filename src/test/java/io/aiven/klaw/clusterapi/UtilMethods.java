@@ -5,6 +5,7 @@ import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.models.RequestOperationType;
 import java.util.*;
 import org.apache.kafka.common.acl.AccessControlEntry;
@@ -76,7 +77,7 @@ public class UtilMethods {
   public ClusterTopicRequest getTopicRequest() {
     return ClusterTopicRequest.builder()
         .env("localhost")
-        .protocol("PLAINTEXT")
+        .protocol(KafkaSupportedProtocol.PLAINTEXT)
         .topicName("testtopic")
         .partitions(2)
         .replicationFactor(Short.parseShort("1"))
@@ -110,7 +111,7 @@ public class UtilMethods {
     return ClusterSchemaRequest.builder()
         .env("localhost")
         .fullSchema("{type:string}")
-        .protocol("PLAINTEXT")
+        .protocol(KafkaSupportedProtocol.PLAINTEXT)
         .topicName("testtopic")
         .build();
   }
@@ -119,7 +120,7 @@ public class UtilMethods {
     return ClusterAclRequest.builder()
         .env("localhost")
         .topicName("testtopic")
-        .protocol("PLAINTEXT")
+        .protocol(KafkaSupportedProtocol.PLAINTEXT)
         .consumerGroup("congroup1")
         .aclType(aclType)
         .aclIp("11.12.33.122")

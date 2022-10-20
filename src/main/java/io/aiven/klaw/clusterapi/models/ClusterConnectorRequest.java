@@ -11,7 +11,7 @@ public class ClusterConnectorRequest implements Serializable {
 
   @NotNull private String env;
 
-  @NotNull private String protocol;
+  @NotNull private KafkaSupportedProtocol protocol;
 
   @NotNull private String connectorConfig;
 

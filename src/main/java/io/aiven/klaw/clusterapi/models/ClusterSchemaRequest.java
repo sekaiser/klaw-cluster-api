@@ -10,7 +10,7 @@ public class ClusterSchemaRequest implements Serializable {
 
   private String env;
 
-  private String protocol;
+  private KafkaSupportedProtocol protocol;
 
   private String topicName;
 

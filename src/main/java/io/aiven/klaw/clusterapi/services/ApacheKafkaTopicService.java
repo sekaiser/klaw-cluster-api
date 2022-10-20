@@ -3,6 +3,7 @@ package io.aiven.klaw.clusterapi.services;
 import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +47,7 @@ public class ApacheKafkaTopicService {
   }
 
   public synchronized Set<HashMap<String, String>> loadTopics(
-      String environment, String protocol, String clusterName) throws Exception {
+      String environment, KafkaSupportedProtocol protocol, String clusterName) throws Exception {
     log.info("loadTopics {} {}", environment, protocol);
     AdminClient client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
     Set<HashMap<String, String>> topics = new HashSet<>();

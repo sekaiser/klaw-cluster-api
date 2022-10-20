@@ -1,6 +1,7 @@
 package io.aiven.klaw.clusterapi.services;
 
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.*;
@@ -45,7 +46,7 @@ public class UtilComponentsService {
   //    }
 
   public ClusterStatus getStatus(
-      String environment, String protocol, String clusterName, String clusterType) {
+      String environment, KafkaSupportedProtocol protocol, String clusterName, String clusterType) {
     log.info("getStatus {} {}", environment, protocol);
     switch (clusterType) {
       case "kafka":
@@ -59,7 +60,8 @@ public class UtilComponentsService {
     }
   }
 
-  private ClusterStatus getStatusKafka(String environment, String protocol, String clusterName) {
+  private ClusterStatus getStatusKafka(
+      String environment, KafkaSupportedProtocol protocol, String clusterName) {
     try {
       AdminClient client = clusterApiUtils.getAdminClient(environment, protocol, clusterName);
       if (client != null) {

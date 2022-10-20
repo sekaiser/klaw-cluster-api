@@ -7,6 +7,7 @@ import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
 import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.services.AivenApiService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
@@ -59,7 +60,7 @@ public class ClusterApiController {
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<ClusterStatus> getStatus(
       @PathVariable String bootstrapServers,
-      @PathVariable String protocol,
+      @Valid @PathVariable KafkaSupportedProtocol protocol,
       @PathVariable String clusterName,
       @PathVariable String clusterType) {
     return new ResponseEntity<>(
@@ -73,7 +74,7 @@ public class ClusterApiController {
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<Set<HashMap<String, String>>> getTopics(
       @PathVariable String bootstrapServers,
-      @PathVariable String protocol,
+      @Valid @PathVariable KafkaSupportedProtocol protocol,
       @PathVariable String clusterName)
       throws Exception {
     Set<HashMap<String, String>> topics =
@@ -88,7 +89,7 @@ public class ClusterApiController {
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<Set<Map<String, String>>> getAcls(
       @PathVariable String bootstrapServers,
-      @PathVariable String protocol,
+      @Valid @PathVariable KafkaSupportedProtocol protocol,
       @PathVariable String clusterName,
       @PathVariable String aclsNativeType,
       @PathVariable String projectName,
@@ -109,7 +110,7 @@ public class ClusterApiController {
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<Map<Integer, Map<String, Object>>> getSchema(
       @PathVariable String bootstrapServers,
-      @PathVariable String protocol,
+      @Valid @PathVariable KafkaSupportedProtocol protocol,
       @PathVariable String topicName,
       @PathVariable String clusterName) {
     Map<Integer, Map<String, Object>> schema =
@@ -124,7 +125,7 @@ public class ClusterApiController {
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<List<HashMap<String, String>>> getConsumerOffsets(
       @PathVariable String bootstrapServers,
-      @PathVariable String protocol,
+      @Valid @PathVariable KafkaSupportedProtocol protocol,
       @PathVariable String clusterName,
       @PathVariable String consumerGroupId,
       @PathVariable String topicName)

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
+import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
@@ -27,6 +28,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 @PrepareForTest(AdminClient.class)
 public class GetAdminClientTest {
 
+  public static final String LOCALHOST_9092 = "localhost:9092";
+  public static final String LOCALHOST_9093 = "localhost:9093";
+  public static final String LOCALHOST = "localhost";
   @Mock Environment env;
 
   @Mock AdminClient adminClient;
@@ -51,17 +55,16 @@ public class GetAdminClientTest {
   public void getAdminClient1() throws Exception {
     mockStatic(AdminClient.class);
 
-    String envHost = "localhost:9092";
-
     when(env.getProperty(any())).thenReturn("null");
     when(adminClient.listTopics()).thenReturn(listTopicsResult);
     when(listTopicsResult.names()).thenReturn(kafkaFuture);
     Set<String> setStr = new HashSet<>();
     when(kafkaFuture.get()).thenReturn(setStr);
-    when(adminClientsMap.containsKey(envHost)).thenReturn(false);
+    when(adminClientsMap.containsKey(LOCALHOST_9092)).thenReturn(false);
     BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
 
-    AdminClient result = getAdminClient.getAdminClient(envHost, "PLAINTEXT", "");
+    AdminClient result =
+        getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
     assertNotNull(result);
   }
 
@@ -77,7 +80,8 @@ public class GetAdminClientTest {
     when(kafkaFuture.get()).thenReturn(setStr);
     BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
 
-    AdminClient result = getAdminClient.getAdminClient("localhost:9092", "PLAINTEXT", "");
+    AdminClient result =
+        getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
     assertNotNull(result);
   }
 
@@ -93,7 +97,8 @@ public class GetAdminClientTest {
     Set<String> setStr = new HashSet<>();
     when(kafkaFuture.get()).thenReturn(setStr);
 
-    AdminClient result = getAdminClient.getAdminClient("localhost:9092", "PLAINTEXT", "");
+    AdminClient result =
+        getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
     assertNotNull(result);
   }
 
@@ -101,8 +106,8 @@ public class GetAdminClientTest {
   @Ignore
   public void getPlainProperties() {
     when(env.getProperty(any())).thenReturn("somevalue");
-    Properties props = getAdminClient.getPlainProperties("localhost");
-    assertEquals("localhost", props.getProperty("bootstrap.servers"));
+    Properties props = getAdminClient.getPlainProperties(LOCALHOST);
+    assertEquals(LOCALHOST, props.getProperty("bootstrap.servers"));
   }
 
   @Test
@@ -110,7 +115,7 @@ public class GetAdminClientTest {
   public void getSslProperties() {
     when(env.getProperty(any())).thenReturn("somevalue");
 
-    Properties props = getAdminClient.getSslProperties("localhost:9093", "");
-    assertEquals("localhost:9093", props.getProperty("bootstrap.servers"));
+    Properties props = getAdminClient.getSslProperties(LOCALHOST_9093, "");
+    assertEquals(LOCALHOST_9093, props.getProperty("bootstrap.servers"));
   }
 }

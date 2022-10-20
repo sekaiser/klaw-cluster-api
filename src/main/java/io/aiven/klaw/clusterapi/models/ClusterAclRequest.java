@@ -25,7 +25,7 @@ public class ClusterAclRequest implements Serializable {
 
   private String env;
 
-  private String protocol;
+  private KafkaSupportedProtocol protocol;
 
   private String clusterName;
 
