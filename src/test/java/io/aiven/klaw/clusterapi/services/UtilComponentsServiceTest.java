@@ -1,9 +1,7 @@
 package io.aiven.klaw.clusterapi.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 import io.aiven.klaw.clusterapi.UtilMethods;
@@ -16,8 +14,22 @@ import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
-import java.util.*;
-import org.apache.kafka.clients.admin.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateAclsResult;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.DescribeAclsResult;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.ListTopicsResult;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -25,18 +37,22 @@ import org.apache.kafka.common.acl.AccessControlEntry;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.acl.AclPermissionType;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-@RunWith(MockitoJUnitRunner.class)
+// TODO From my humble point of view more work is require dto fix the test setup.
+// Maybe it is also worth considering redesigning some classes involved to better adhere to shallow
+// depth of test principle.
+@ExtendWith(MockitoExtension.class)
 public class UtilComponentsServiceTest {
 
   @Mock private ClusterApiUtils getAdminClient;
@@ -79,16 +95,17 @@ public class UtilComponentsServiceTest {
 
   private SchemaService schemaService;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     utilComponentsService = new UtilComponentsService(env, getAdminClient);
-    apacheKafkaAclService = new ApacheKafkaAclService();
+    apacheKafkaAclService = new ApacheKafkaAclService(getAdminClient);
     apacheKafkaTopicService = new ApacheKafkaTopicService();
+    schemaService = new SchemaService(getAdminClient);
     utilMethods = new UtilMethods();
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void getStatusOnline() throws Exception {
     Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
 
@@ -96,7 +113,7 @@ public class UtilComponentsServiceTest {
         .thenReturn(adminClient);
     ClusterStatus result =
         utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertEquals(ClusterStatus.ONLINE, result);
+    assertThat(ClusterStatus.ONLINE).isEqualTo(result);
   }
 
   @Test
@@ -104,7 +121,7 @@ public class UtilComponentsServiceTest {
 
     ClusterStatus result =
         utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertEquals(ClusterStatus.OFFLINE, result);
+    assertThat(ClusterStatus.OFFLINE).isEqualTo(result);
   }
 
   @Test
@@ -112,11 +129,11 @@ public class UtilComponentsServiceTest {
 
     ClusterStatus result =
         utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertEquals(ClusterStatus.OFFLINE, result);
+    assertThat(ClusterStatus.OFFLINE).isEqualTo(result);
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void loadAcls1() throws Exception {
     List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
@@ -131,11 +148,11 @@ public class UtilComponentsServiceTest {
 
     Set<Map<String, String>> result =
         apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
-    assertEquals(1, result.size());
+    assertThat(result).hasSize(1);
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void loadAcls2() throws Exception {
     List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
@@ -150,7 +167,7 @@ public class UtilComponentsServiceTest {
 
     Set<Map<String, String>> result =
         apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
-    assertEquals(0, result.size());
+    assertThat(result).isEmpty();
   }
 
   @Test
@@ -161,11 +178,11 @@ public class UtilComponentsServiceTest {
 
     Set<Map<String, String>> result =
         apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
-    assertEquals(0, result.size());
+    assertThat(result).isEmpty();
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void loadTopics() throws Exception {
     Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
     Set<String> list = new HashSet<>();
@@ -192,13 +209,13 @@ public class UtilComponentsServiceTest {
     hashMap1.put("replicationFactor", "1");
     hashMap1.put("topicName", "testtopic1");
 
-    assertEquals(2, result.size());
-    assertEquals(hashMap, new ArrayList<>(result).get(0));
-    assertEquals(hashMap1, new ArrayList<>(result).get(1));
+    assertThat(result).hasSize(2);
+    assertThat(hashMap).isEqualTo(new ArrayList<>(result).get(0));
+    assertThat(hashMap1).isEqualTo(new ArrayList<>(result).get(1));
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void createTopicSuccess() throws Exception {
     ClusterTopicRequest clusterTopicRequest =
         ClusterTopicRequest.builder()
@@ -217,64 +234,73 @@ public class UtilComponentsServiceTest {
     when(futureTocpiCreateResult.get(anyString())).thenReturn(kFutureVoid);
 
     ApiResponse result = apacheKafkaTopicService.createTopic(clusterTopicRequest);
-    assertEquals(ApiResultStatus.SUCCESS.value, result.getResult());
+    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result.getResult());
   }
 
-  @Test(expected = Exception.class)
+  // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
+  @Test
   public void createTopicFailure1() throws Exception {
-    ClusterTopicRequest clusterTopicRequest =
-        ClusterTopicRequest.builder()
-            .env("localhost")
-            .protocol(KafkaSupportedProtocol.PLAINTEXT)
-            .topicName("testtopic")
-            .partitions(1)
-            .replicationFactor(Short.parseShort("1"))
-            .clusterName("")
-            .build();
-
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(null);
-
-    apacheKafkaTopicService.createTopic(clusterTopicRequest);
-  }
-
-  @Test(expected = NumberFormatException.class)
-  public void createTopicFailure2() throws Exception {
-    ClusterTopicRequest clusterTopicRequest =
-        ClusterTopicRequest.builder()
-            .env("localhost")
-            .protocol(KafkaSupportedProtocol.PLAINTEXT)
-            .topicName("testtopic")
-            .partitions(1)
-            .replicationFactor(Short.parseShort("1aa"))
-            .clusterName("")
-            .build();
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-
-    apacheKafkaTopicService.createTopic(clusterTopicRequest);
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void createTopicFailure4() throws Exception {
-    ClusterTopicRequest clusterTopicRequest =
-        ClusterTopicRequest.builder()
-            .env("localhost")
-            .protocol(KafkaSupportedProtocol.PLAINTEXT)
-            .topicName("testtopic1")
-            .partitions(1)
-            .replicationFactor(Short.parseShort("1aa"))
-            .clusterName("")
-            .build();
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.createTopics(any())).thenThrow(new RuntimeException("Runtime exption"));
-
-    apacheKafkaTopicService.createTopic(clusterTopicRequest);
+    Exception thrown =
+        Assertions.assertThrows(
+            Exception.class,
+            () -> {
+              ClusterTopicRequest clusterTopicRequest =
+                  ClusterTopicRequest.builder()
+                      .env("localhost")
+                      .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                      .topicName("testtopic")
+                      .partitions(1)
+                      .replicationFactor(Short.parseShort("1"))
+                      .clusterName("")
+                      .build();
+              apacheKafkaTopicService.createTopic(clusterTopicRequest);
+            });
   }
 
   @Test
-  @Ignore
+  public void createTopicFailure2() throws Exception {
+    NumberFormatException thrown =
+        Assertions.assertThrows(
+            NumberFormatException.class,
+            () -> {
+              ClusterTopicRequest clusterTopicRequest =
+                  ClusterTopicRequest.builder()
+                      .env("localhost")
+                      .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                      .topicName("testtopic")
+                      .partitions(1)
+                      .replicationFactor(Short.parseShort("1aa"))
+                      .clusterName("")
+                      .build();
+              when(getAdminClient.getAdminClient(
+                      any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                  .thenReturn(adminClient);
+              apacheKafkaTopicService.createTopic(clusterTopicRequest);
+            });
+  }
+
+  // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
+  @Test
+  public void createTopicFailure4() throws Exception {
+    RuntimeException thrown =
+        Assertions.assertThrows(
+            RuntimeException.class,
+            () -> {
+              ClusterTopicRequest clusterTopicRequest =
+                  ClusterTopicRequest.builder()
+                      .env("localhost")
+                      .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                      .topicName("testtopic1")
+                      .partitions(1)
+                      .replicationFactor(Short.parseShort("1aa"))
+                      .clusterName("")
+                      .build();
+              apacheKafkaTopicService.createTopic(clusterTopicRequest);
+            });
+  }
+
+  @Test
+  @Disabled
   public void createProducerAcl1() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
@@ -282,11 +308,12 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-    assertEquals(ApiResultStatus.SUCCESS.value, result);
+
+    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void createProducerAcl2() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
@@ -294,11 +321,11 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-    assertEquals(ApiResultStatus.SUCCESS.value, result);
+    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void createConsumerAcl1() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
@@ -306,11 +333,11 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertEquals(ApiResultStatus.SUCCESS.value, result);
+    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void createConsumerAcl2() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
@@ -318,7 +345,7 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertEquals(ApiResultStatus.SUCCESS.value, result);
+    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
   }
 
   @Test
@@ -326,28 +353,33 @@ public class UtilComponentsServiceTest {
     ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
     ApiResponse apiResponse = ApiResponse.builder().result("Schema created id : 101").build();
     ResponseEntity<ApiResponse> response = new ResponseEntity<>(apiResponse, HttpStatus.OK);
-
-    when(getAdminClient.getRestTemplate()).thenReturn(restTemplate);
-    when(restTemplate.postForEntity(anyString(), any(), eq(ApiResponse.class)))
-        .thenReturn(response);
+    when(getAdminClient.getRequestDetails(any(), any(), any()))
+        .thenReturn(Pair.of("", restTemplate));
+    when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
+        .thenReturn(new ResponseEntity<>("Schema created id : 101", HttpStatus.OK));
 
     ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
-    assertEquals("Schema created id : 101", resultResp.getResult());
+    assertThat("Schema created id : 101").isEqualTo(resultResp.getResult());
   }
 
   @Test
   public void postSchema2() {
     ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
-
+    when(getAdminClient.getRequestDetails(any(), any(), any()))
+        .thenReturn(Pair.of("", restTemplate));
+    when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
+        .thenReturn(
+            new ResponseEntity<>(
+                "Cannot retrieve SchemaRegistry Url", HttpStatus.INTERNAL_SERVER_ERROR));
     ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
-    assertEquals("Cannot retrieve SchemaRegistry Url", resultResp.getResult());
+    assertThat("Cannot retrieve SchemaRegistry Url").isEqualTo(resultResp.getResult());
   }
 
   private Map<String, TopicDescription> getTopicDescs() {
     Node node = new Node(1, "localhost", 1);
 
     TopicPartitionInfo topicPartitionInfo =
-        new TopicPartitionInfo(2, node, Arrays.asList(node), Arrays.asList(node));
+        new TopicPartitionInfo(2, node, List.of(node), List.of(node));
     TopicDescription tDesc =
         new TopicDescription(
             "testtopic", true, Arrays.asList(topicPartitionInfo, topicPartitionInfo));
