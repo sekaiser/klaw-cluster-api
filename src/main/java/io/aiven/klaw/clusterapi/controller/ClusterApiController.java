@@ -16,27 +16,28 @@ import io.aiven.klaw.clusterapi.services.SchemaService;
 import io.aiven.klaw.clusterapi.services.UtilComponentsService;
 import java.util.*;
 import javax.validation.Valid;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/topics")
 @Slf4j
+@AllArgsConstructor
 public class ClusterApiController {
 
-  @Autowired UtilComponentsService utilComponentsService;
+  UtilComponentsService utilComponentsService;
 
-  @Autowired ApacheKafkaAclService apacheKafkaAclService;
+  ApacheKafkaAclService apacheKafkaAclService;
 
-  @Autowired ApacheKafkaTopicService apacheKafkaTopicService;
+  ApacheKafkaTopicService apacheKafkaTopicService;
 
-  @Autowired SchemaService schemaService;
+  SchemaService schemaService;
 
-  @Autowired MonitoringService monitoringService;
+  MonitoringService monitoringService;
 
-  @Autowired AivenApiService aivenApiService;
+  AivenApiService aivenApiService;
 
   @RequestMapping(
       value = "/getApiStatus",

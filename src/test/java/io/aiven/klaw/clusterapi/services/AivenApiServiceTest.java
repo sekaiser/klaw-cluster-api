@@ -1,30 +1,30 @@
 package io.aiven.klaw.clusterapi.services;
 
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AivenApiServiceTest {
 
   AivenApiService aivenApiService;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     aivenApiService = new AivenApiService();
   }
 
-  @Ignore
   @Test
+  @Disabled
   public void getAclsListTest() throws Exception {
     // TODO when, asserts
     aivenApiService.listAcls("dev-sandbox", "kafka-acls-kw");
   }
 
-  @Ignore
+  @Disabled
   @Test
   public void createAclsTest() throws Exception {
     // TODO when, asserts
@@ -40,7 +40,7 @@ public class AivenApiServiceTest {
     aivenApiService.createAcls(clusterAclRequest);
   }
 
-  @Ignore
+  @Disabled
   @Test
   public void deleteAclsTest() throws Exception {
     // TODO when, asserts
