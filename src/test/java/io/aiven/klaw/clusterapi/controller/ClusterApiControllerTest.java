@@ -25,6 +25,7 @@ import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
 import io.aiven.klaw.clusterapi.services.MonitoringService;
 import io.aiven.klaw.clusterapi.services.SchemaService;
 import io.aiven.klaw.clusterapi.services.UtilComponentsService;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,14 +74,17 @@ public class ClusterApiControllerTest {
             bootstrapServers, KafkaSupportedProtocol.PLAINTEXT, clusterName, clusterType))
         .thenReturn(ClusterStatus.ONLINE);
 
+    String urlTemplate =
+        String.join(
+            "/",
+            "/topics",
+            "getStatus",
+            bootstrapServers,
+            KafkaSupportedProtocol.PLAINTEXT.getValue(),
+            clusterName,
+            clusterType);
     mvc.perform(
-            MockMvcRequestBuilders.get(
-                    "/topics/getStatus/"
-                        + bootstrapServers
-                        + "/PLAINTEXT/"
-                        + clusterName
-                        + "/"
-                        + clusterType)
+            MockMvcRequestBuilders.get(urlTemplate)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -92,11 +96,20 @@ public class ClusterApiControllerTest {
   public void getTopics() throws Exception {
     String clusterName = "testCluster";
     String bootstrapServers = "localhost:9092";
+
     when(apacheKafkaTopicService.loadTopics(
             bootstrapServers, KafkaSupportedProtocol.PLAINTEXT, clusterName))
         .thenReturn(utilMethods.getTopics());
 
-    mvc.perform(get("/topics/getTopics/" + bootstrapServers + "/PLAINTEXT/" + clusterName))
+    String urlTemplate =
+        String.join(
+            "/",
+            "/topics",
+            "getTopics",
+            bootstrapServers,
+            KafkaSupportedProtocol.PLAINTEXT.getValue(),
+            clusterName);
+    mvc.perform(get(urlTemplate))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$", hasSize(1)));
@@ -114,16 +127,18 @@ public class ClusterApiControllerTest {
             bootstrapServers, KafkaSupportedProtocol.PLAINTEXT, clusterName))
         .thenReturn(utilMethods.getAcls());
 
-    mvc.perform(
-            get(
-                String.format(
-                    "/topics/getAcls/%s/%s/%s/%s/%s/%s",
-                    bootstrapServers,
-                    aclsNativeType,
-                    "PLAINTEXT",
-                    clusterName,
-                    projectName,
-                    serviceName)))
+    String urlTemplate =
+        String.join(
+            "/",
+            "/topics",
+            "getAcls",
+            bootstrapServers,
+            aclsNativeType,
+            KafkaSupportedProtocol.PLAINTEXT.getValue(),
+            clusterName,
+            projectName,
+            serviceName);
+    mvc.perform(get(urlTemplate))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$", hasSize(2)));
@@ -141,7 +156,7 @@ public class ClusterApiControllerTest {
             post("/topics/createTopics")
                 .content(jsonReq)
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("utf-8"))
+                .characterEncoding(StandardCharsets.UTF_8))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
@@ -159,7 +174,7 @@ public class ClusterApiControllerTest {
             post("/topics/createAcls")
                 .content(jsonReq)
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("utf-8"))
+                .characterEncoding(StandardCharsets.UTF_8))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
@@ -177,7 +192,7 @@ public class ClusterApiControllerTest {
             post("/topics/createAcls")
                 .content(jsonReq)
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("utf-8"))
+                .characterEncoding(StandardCharsets.UTF_8))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
@@ -207,7 +222,7 @@ public class ClusterApiControllerTest {
             post("/topics/postSchema")
                 .content(jsonReq)
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("utf-8"))
+                .characterEncoding(StandardCharsets.UTF_8))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
@@ -224,7 +239,7 @@ public class ClusterApiControllerTest {
             post("/topics/postSchema")
                 .content(jsonReq)
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("utf-8"))
+                .characterEncoding(StandardCharsets.UTF_8))
         .andExpect(status().is5xxServerError());
   }
 }
