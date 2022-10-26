@@ -113,7 +113,7 @@ public class UtilComponentsServiceTest {
         .thenReturn(adminClient);
     ClusterStatus result =
         utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertThat(ClusterStatus.ONLINE).isEqualTo(result);
+    assertThat(result).isSameAs(ClusterStatus.ONLINE);
   }
 
   @Test
@@ -121,7 +121,7 @@ public class UtilComponentsServiceTest {
 
     ClusterStatus result =
         utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertThat(ClusterStatus.OFFLINE).isEqualTo(result);
+    assertThat(result).isSameAs(ClusterStatus.OFFLINE);
   }
 
   @Test
@@ -129,7 +129,7 @@ public class UtilComponentsServiceTest {
 
     ClusterStatus result =
         utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertThat(ClusterStatus.OFFLINE).isEqualTo(result);
+    assertThat(result).isSameAs(ClusterStatus.OFFLINE);
   }
 
   @Test
@@ -234,7 +234,7 @@ public class UtilComponentsServiceTest {
     when(futureTocpiCreateResult.get(anyString())).thenReturn(kFutureVoid);
 
     ApiResponse result = apacheKafkaTopicService.createTopic(clusterTopicRequest);
-    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result.getResult());
+    assertThat(result.getResult()).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
@@ -309,7 +309,7 @@ public class UtilComponentsServiceTest {
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
 
-    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
+    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
@@ -321,7 +321,7 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
+    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
@@ -333,7 +333,7 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
+    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
@@ -345,7 +345,7 @@ public class UtilComponentsServiceTest {
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertThat(ApiResultStatus.SUCCESS.value).isEqualTo(result);
+    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
@@ -359,7 +359,7 @@ public class UtilComponentsServiceTest {
         .thenReturn(new ResponseEntity<>("Schema created id : 101", HttpStatus.OK));
 
     ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
-    assertThat("Schema created id : 101").isEqualTo(resultResp.getResult());
+    assertThat(resultResp.getResult()).isEqualTo("Schema created id : 101");
   }
 
   @Test
@@ -372,7 +372,7 @@ public class UtilComponentsServiceTest {
             new ResponseEntity<>(
                 "Cannot retrieve SchemaRegistry Url", HttpStatus.INTERNAL_SERVER_ERROR));
     ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
-    assertThat("Cannot retrieve SchemaRegistry Url").isEqualTo(resultResp.getResult());
+    assertThat(resultResp.getResult()).isEqualTo("Cannot retrieve SchemaRegistry Url");
   }
 
   private Map<String, TopicDescription> getTopicDescs() {

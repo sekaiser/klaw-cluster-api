@@ -48,7 +48,6 @@ public class GetAdminClientTest {
   public void getAdminClient1() throws Exception {
     try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
       mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
-
       when(adminClient.listTopics()).thenReturn(listTopicsResult);
       when(listTopicsResult.names()).thenReturn(kafkaFuture);
       Set<String> setStr = new HashSet<>();
@@ -63,12 +62,12 @@ public class GetAdminClientTest {
   @Test
   public void getPlainProperties() {
     Properties props = getAdminClient.getPlainProperties(LOCALHOST);
-    assertThat(LOCALHOST).isEqualTo(props.getProperty("bootstrap.servers"));
+    assertThat(props.getProperty("bootstrap.servers")).isEqualTo(LOCALHOST);
   }
 
   @Test
   public void getSslProperties() {
     Properties props = getAdminClient.getSslProperties(LOCALHOST_9093, "");
-    assertThat(LOCALHOST_9093).isEqualTo(props.getProperty("bootstrap.servers"));
+    assertThat(props.getProperty("bootstrap.servers")).isEqualTo(LOCALHOST_9093);
   }
 }
