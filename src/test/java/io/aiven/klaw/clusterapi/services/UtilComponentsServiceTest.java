@@ -1,6 +1,7 @@
 package io.aiven.klaw.clusterapi.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateAclsResult;
@@ -37,7 +40,6 @@ import org.apache.kafka.common.acl.AccessControlEntry;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.acl.AclPermissionType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -55,342 +57,348 @@ import org.springframework.web.client.RestTemplate;
 @ExtendWith(MockitoExtension.class)
 public class UtilComponentsServiceTest {
 
-  @Mock private ClusterApiUtils getAdminClient;
+    @Mock
+    private ClusterApiUtils getAdminClient;
 
-  @Mock private Environment env;
+    @Mock
+    private Environment env;
 
-  @Mock private AdminClient adminClient;
+    @Mock
+    private AdminClient adminClient;
 
-  @Mock private ListTopicsResult listTopicsResult;
+    @Mock
+    private ListTopicsResult listTopicsResult;
 
-  @Mock private KafkaFuture<Set<String>> kafkaFuture;
+    @Mock
+    private KafkaFuture<Set<String>> kafkaFuture;
 
-  @Mock private KafkaFuture<Map<String, TopicDescription>> kafkaFutureTopicdesc;
+    @Mock
+    private KafkaFuture<Map<String, TopicDescription>> kafkaFutureTopicdesc;
 
-  @Mock private KafkaFuture<Collection<AclBinding>> kafkaFutureCollection;
+    @Mock
+    private KafkaFuture<Collection<AclBinding>> kafkaFutureCollection;
 
-  @Mock private DescribeTopicsResult describeTopicsResult;
+    @Mock
+    private DescribeTopicsResult describeTopicsResult;
 
-  @Mock private DescribeAclsResult describeAclsResult;
+    @Mock
+    private DescribeAclsResult describeAclsResult;
 
-  @Mock private AccessControlEntry accessControlEntry;
+    @Mock
+    private AccessControlEntry accessControlEntry;
 
-  @Mock private CreateTopicsResult createTopicsResult;
+    @Mock
+    private CreateTopicsResult createTopicsResult;
 
-  @Mock private CreateAclsResult createAclsResult;
+    @Mock
+    private CreateAclsResult createAclsResult;
 
-  @Mock private Map<String, KafkaFuture<Void>> futureTocpiCreateResult;
+    @Mock
+    private Map<String, KafkaFuture<Void>> futureTocpiCreateResult;
 
-  @Mock private KafkaFuture<Void> kFutureVoid;
+    @Mock
+    private KafkaFuture<Void> kFutureVoid;
 
-  @Mock private RestTemplate restTemplate;
+    @Mock
+    private RestTemplate restTemplate;
 
-  private UtilMethods utilMethods;
+    private UtilMethods utilMethods;
 
-  private UtilComponentsService utilComponentsService;
+    private UtilComponentsService utilComponentsService;
 
-  private ApacheKafkaAclService apacheKafkaAclService;
+    private ApacheKafkaAclService apacheKafkaAclService;
 
-  private ApacheKafkaTopicService apacheKafkaTopicService;
+    private ApacheKafkaTopicService apacheKafkaTopicService;
 
-  private SchemaService schemaService;
+    private SchemaService schemaService;
 
-  @BeforeEach
-  public void setUp() {
-    utilComponentsService = new UtilComponentsService(env, getAdminClient);
-    apacheKafkaAclService = new ApacheKafkaAclService(getAdminClient);
-    apacheKafkaTopicService = new ApacheKafkaTopicService();
-    schemaService = new SchemaService(getAdminClient);
-    utilMethods = new UtilMethods();
-  }
+    @BeforeEach
+    public void setUp() {
+        utilComponentsService = new UtilComponentsService(env, getAdminClient);
+        apacheKafkaAclService = new ApacheKafkaAclService(getAdminClient);
+        apacheKafkaTopicService = new ApacheKafkaTopicService();
+        schemaService = new SchemaService(getAdminClient);
+        utilMethods = new UtilMethods();
+    }
 
-  @Test
-  @Disabled
-  public void getStatusOnline() throws Exception {
-    Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
+    @Test
+    @Disabled
+    public void getStatusOnline() throws Exception {
+        Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
 
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    ClusterStatus result =
-        utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertThat(result).isSameAs(ClusterStatus.ONLINE);
-  }
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        ClusterStatus result =
+                utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
+        assertThat(result).isSameAs(ClusterStatus.ONLINE);
+    }
 
-  @Test
-  public void getStatusOffline1() {
+    @Test
+    public void getStatusOffline1() {
 
-    ClusterStatus result =
-        utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertThat(result).isSameAs(ClusterStatus.OFFLINE);
-  }
+        ClusterStatus result =
+                utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
+        assertThat(result).isSameAs(ClusterStatus.OFFLINE);
+    }
 
-  @Test
-  public void getStatusOffline2() {
+    @Test
+    public void getStatusOffline2() {
 
-    ClusterStatus result =
-        utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
-    assertThat(result).isSameAs(ClusterStatus.OFFLINE);
-  }
+        ClusterStatus result =
+                utilComponentsService.getStatus("localhost", KafkaSupportedProtocol.PLAINTEXT, "", "");
+        assertThat(result).isSameAs(ClusterStatus.OFFLINE);
+    }
 
-  @Test
-  @Disabled
-  public void loadAcls1() throws Exception {
-    List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
+    @Test
+    @Disabled
+    public void loadAcls1() throws Exception {
+        List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
-    when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
-    when(kafkaFutureCollection.get()).thenReturn(listAclBindings);
-    when(accessControlEntry.host()).thenReturn("11.12.33.456");
-    when(accessControlEntry.operation()).thenReturn(AclOperation.READ);
-    when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
+        when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
+        when(kafkaFutureCollection.get()).thenReturn(listAclBindings);
+        when(accessControlEntry.host()).thenReturn("11.12.33.456");
+        when(accessControlEntry.operation()).thenReturn(AclOperation.READ);
+        when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
 
-    Set<Map<String, String>> result =
-        apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
-    assertThat(result).hasSize(1);
-  }
+        Set<Map<String, String>> result =
+                apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
+        assertThat(result).hasSize(1);
+    }
 
-  @Test
-  @Disabled
-  public void loadAcls2() throws Exception {
-    List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
+    @Test
+    @Disabled
+    public void loadAcls2() throws Exception {
+        List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
-    when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
-    when(kafkaFutureCollection.get()).thenReturn(listAclBindings);
-    when(accessControlEntry.host()).thenReturn("11.12.33.456");
-    when(accessControlEntry.operation()).thenReturn(AclOperation.CREATE);
-    when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
+        when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
+        when(kafkaFutureCollection.get()).thenReturn(listAclBindings);
+        when(accessControlEntry.host()).thenReturn("11.12.33.456");
+        when(accessControlEntry.operation()).thenReturn(AclOperation.CREATE);
+        when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
 
-    Set<Map<String, String>> result =
-        apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
-    assertThat(result).isEmpty();
-  }
+        Set<Map<String, String>> result =
+                apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
+        assertThat(result).isEmpty();
+    }
 
-  @Test
-  public void loadAcls3() throws Exception {
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.describeAcls(any())).thenThrow(new RuntimeException("Describe Acls Error"));
+    @Test
+    public void loadAcls3() throws Exception {
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.describeAcls(any())).thenThrow(new RuntimeException("Describe Acls Error"));
 
-    Set<Map<String, String>> result =
-        apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
-    assertThat(result).isEmpty();
-  }
+        Set<Map<String, String>> result =
+                apacheKafkaAclService.loadAcls("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
+        assertThat(result).isEmpty();
+    }
 
-  @Test
-  @Disabled
-  public void loadTopics() throws Exception {
-    Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
-    Set<String> list = new HashSet<>();
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.listTopics()).thenReturn(listTopicsResult);
-    when(listTopicsResult.names()).thenReturn(kafkaFuture);
-    when(kafkaFuture.get()).thenReturn(list);
+    @Test
+    @Disabled
+    public void loadTopics() throws Exception {
+        Set<HashMap<String, String>> topicsSet = utilMethods.getTopics();
+        Set<String> list = new HashSet<>();
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.listTopics()).thenReturn(listTopicsResult);
+        when(listTopicsResult.names()).thenReturn(kafkaFuture);
+        when(kafkaFuture.get()).thenReturn(list);
 
-    when(adminClient.describeTopics((Collection<String>) any())).thenReturn(describeTopicsResult);
-    when(describeTopicsResult.all()).thenReturn(kafkaFutureTopicdesc);
-    when(kafkaFutureTopicdesc.get()).thenReturn(getTopicDescs());
+        when(adminClient.describeTopics((Collection<String>) any())).thenReturn(describeTopicsResult);
+        when(describeTopicsResult.all()).thenReturn(kafkaFutureTopicdesc);
+        when(kafkaFutureTopicdesc.get()).thenReturn(getTopicDescs());
 
-    Set<HashMap<String, String>> result =
-        apacheKafkaTopicService.loadTopics("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
+        Set<HashMap<String, String>> result =
+                apacheKafkaTopicService.loadTopics("localhost", KafkaSupportedProtocol.PLAINTEXT, "");
 
-    HashMap<String, String> hashMap = new HashMap<>();
-    hashMap.put("partitions", "2");
-    hashMap.put("replicationFactor", "1");
-    hashMap.put("topicName", "testtopic2");
+        HashMap<String, String> hashMap = new HashMap<>();
+        hashMap.put("partitions", "2");
+        hashMap.put("replicationFactor", "1");
+        hashMap.put("topicName", "testtopic2");
 
-    HashMap<String, String> hashMap1 = new HashMap<>();
-    hashMap1.put("partitions", "2");
-    hashMap1.put("replicationFactor", "1");
-    hashMap1.put("topicName", "testtopic1");
+        HashMap<String, String> hashMap1 = new HashMap<>();
+        hashMap1.put("partitions", "2");
+        hashMap1.put("replicationFactor", "1");
+        hashMap1.put("topicName", "testtopic1");
 
-    assertThat(result).hasSize(2);
-    assertThat(hashMap).isEqualTo(new ArrayList<>(result).get(0));
-    assertThat(hashMap1).isEqualTo(new ArrayList<>(result).get(1));
-  }
+        assertThat(result).hasSize(2);
+        assertThat(hashMap).isEqualTo(new ArrayList<>(result).get(0));
+        assertThat(hashMap1).isEqualTo(new ArrayList<>(result).get(1));
+    }
 
-  @Test
-  @Disabled
-  public void createTopicSuccess() throws Exception {
-    ClusterTopicRequest clusterTopicRequest =
-        ClusterTopicRequest.builder()
-            .env("localhost")
-            .protocol(KafkaSupportedProtocol.PLAINTEXT)
-            .topicName("testtopic")
-            .partitions(1)
-            .replicationFactor(Short.parseShort("1"))
-            .clusterName("")
-            .build();
+    @Test
+    @Disabled
+    public void createTopicSuccess() throws Exception {
+        ClusterTopicRequest clusterTopicRequest =
+                ClusterTopicRequest.builder()
+                        .env("localhost")
+                        .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                        .topicName("testtopic")
+                        .partitions(1)
+                        .replicationFactor(Short.parseShort("1"))
+                        .clusterName("")
+                        .build();
 
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), ""))
-        .thenReturn(adminClient);
-    when(adminClient.createTopics(any())).thenReturn(createTopicsResult);
-    when(createTopicsResult.values()).thenReturn(futureTocpiCreateResult);
-    when(futureTocpiCreateResult.get(anyString())).thenReturn(kFutureVoid);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), ""))
+                .thenReturn(adminClient);
+        when(adminClient.createTopics(any())).thenReturn(createTopicsResult);
+        when(createTopicsResult.values()).thenReturn(futureTocpiCreateResult);
+        when(futureTocpiCreateResult.get(anyString())).thenReturn(kFutureVoid);
 
-    ApiResponse result = apacheKafkaTopicService.createTopic(clusterTopicRequest);
-    assertThat(result.getResult()).isEqualTo(ApiResultStatus.SUCCESS.value);
-  }
+        ApiResponse result = apacheKafkaTopicService.createTopic(clusterTopicRequest);
+        assertThat(result.getResult()).isEqualTo(ApiResultStatus.SUCCESS.value);
+    }
 
-  // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
-  @Test
-  public void createTopicFailure1() throws Exception {
-    Exception thrown =
-        Assertions.assertThrows(
-            Exception.class,
-            () -> {
-              ClusterTopicRequest clusterTopicRequest =
-                  ClusterTopicRequest.builder()
-                      .env("localhost")
-                      .protocol(KafkaSupportedProtocol.PLAINTEXT)
-                      .topicName("testtopic")
-                      .partitions(1)
-                      .replicationFactor(Short.parseShort("1"))
-                      .clusterName("")
-                      .build();
-              apacheKafkaTopicService.createTopic(clusterTopicRequest);
-            });
-  }
+    // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
+    @Test
+    public void createTopicFailure1() throws Exception {
+        assertThatThrownBy(() -> {
+            ClusterTopicRequest clusterTopicRequest =
+                    ClusterTopicRequest.builder()
+                            .env("localhost")
+                            .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                            .topicName("testtopic")
+                            .partitions(1)
+                            .replicationFactor(Short.parseShort("1"))
+                            .clusterName("")
+                            .build();
+            apacheKafkaTopicService.createTopic(clusterTopicRequest);
+        }).isInstanceOf(Exception.class);
+    }
 
-  @Test
-  public void createTopicFailure2() throws Exception {
-    NumberFormatException thrown =
-        Assertions.assertThrows(
-            NumberFormatException.class,
-            () -> {
-              ClusterTopicRequest clusterTopicRequest =
-                  ClusterTopicRequest.builder()
-                      .env("localhost")
-                      .protocol(KafkaSupportedProtocol.PLAINTEXT)
-                      .topicName("testtopic")
-                      .partitions(1)
-                      .replicationFactor(Short.parseShort("1aa"))
-                      .clusterName("")
-                      .build();
-              when(getAdminClient.getAdminClient(
-                      any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-                  .thenReturn(adminClient);
-              apacheKafkaTopicService.createTopic(clusterTopicRequest);
-            });
-  }
+    @Test
+    public void createTopicFailure2() throws Exception {
+        assertThatThrownBy(() -> {
+            ClusterTopicRequest clusterTopicRequest =
+                    ClusterTopicRequest.builder()
+                            .env("localhost")
+                            .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                            .topicName("testtopic")
+                            .partitions(1)
+                            .replicationFactor(Short.parseShort("1aa"))
+                            .clusterName("")
+                            .build();
+            when(getAdminClient.getAdminClient(
+                    any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                    .thenReturn(adminClient);
+            apacheKafkaTopicService.createTopic(clusterTopicRequest);
+        }).isInstanceOf(NumberFormatException.class);
+    }
 
-  // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
-  @Test
-  public void createTopicFailure4() throws Exception {
-    RuntimeException thrown =
-        Assertions.assertThrows(
-            RuntimeException.class,
-            () -> {
-              ClusterTopicRequest clusterTopicRequest =
-                  ClusterTopicRequest.builder()
-                      .env("localhost")
-                      .protocol(KafkaSupportedProtocol.PLAINTEXT)
-                      .topicName("testtopic1")
-                      .partitions(1)
-                      .replicationFactor(Short.parseShort("1aa"))
-                      .clusterName("")
-                      .build();
-              apacheKafkaTopicService.createTopic(clusterTopicRequest);
-            });
-  }
+    // TODO review test configuration, since an NPE is thrown, which is most likely not intended here.
+    @Test
+    public void createTopicFailure4() throws Exception {
+        assertThatThrownBy(() -> {
+            ClusterTopicRequest clusterTopicRequest =
+                    ClusterTopicRequest.builder()
+                            .env("localhost")
+                            .protocol(KafkaSupportedProtocol.PLAINTEXT)
+                            .topicName("testtopic1")
+                            .partitions(1)
+                            .replicationFactor(Short.parseShort("1aa"))
+                            .clusterName("")
+                            .build();
+            apacheKafkaTopicService.createTopic(clusterTopicRequest);
+        }).isInstanceOf(RuntimeException.class);
+    }
 
-  @Test
-  @Disabled
-  public void createProducerAcl1() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.createAcls(any())).thenReturn(createAclsResult);
+    @Test
+    @Disabled
+    public void createProducerAcl1() throws Exception {
+        ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
-    String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
+        String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
 
-    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
-  }
+        assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
+    }
 
-  @Test
-  @Disabled
-  public void createProducerAcl2() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.createAcls(any())).thenReturn(createAclsResult);
+    @Test
+    @Disabled
+    public void createProducerAcl2() throws Exception {
+        ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
-    String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
-    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
-  }
+        String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
+        assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
+    }
 
-  @Test
-  @Disabled
-  public void createConsumerAcl1() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.createAcls(any())).thenReturn(createAclsResult);
+    @Test
+    @Disabled
+    public void createConsumerAcl1() throws Exception {
+        ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
-    String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
-  }
+        String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
+    }
 
-  @Test
-  @Disabled
-  public void createConsumerAcl2() throws Exception {
-    ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
-        .thenReturn(adminClient);
-    when(adminClient.createAcls(any())).thenReturn(createAclsResult);
+    @Test
+    @Disabled
+    public void createConsumerAcl2() throws Exception {
+        ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
+        when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+                .thenReturn(adminClient);
+        when(adminClient.createAcls(any())).thenReturn(createAclsResult);
 
-    String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
-    assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
-  }
+        String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
+        assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
+    }
 
-  @Test
-  public void postSchema1() {
-    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
-    ApiResponse apiResponse = ApiResponse.builder().result("Schema created id : 101").build();
-    ResponseEntity<ApiResponse> response = new ResponseEntity<>(apiResponse, HttpStatus.OK);
-    when(getAdminClient.getRequestDetails(any(), any(), any()))
-        .thenReturn(Pair.of("", restTemplate));
-    when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
-        .thenReturn(new ResponseEntity<>("Schema created id : 101", HttpStatus.OK));
+    @Test
+    public void postSchema1() {
+        ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+        ApiResponse apiResponse = ApiResponse.builder().result("Schema created id : 101").build();
+        ResponseEntity<ApiResponse> response = new ResponseEntity<>(apiResponse, HttpStatus.OK);
+        when(getAdminClient.getRequestDetails(any(), any(), any()))
+                .thenReturn(Pair.of("", restTemplate));
+        when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
+                .thenReturn(new ResponseEntity<>("Schema created id : 101", HttpStatus.OK));
 
-    ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
-    assertThat(resultResp.getResult()).isEqualTo("Schema created id : 101");
-  }
+        ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
+        assertThat(resultResp.getResult()).isEqualTo("Schema created id : 101");
+    }
 
-  @Test
-  public void postSchema2() {
-    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
-    when(getAdminClient.getRequestDetails(any(), any(), any()))
-        .thenReturn(Pair.of("", restTemplate));
-    when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
-        .thenReturn(
-            new ResponseEntity<>(
-                "Cannot retrieve SchemaRegistry Url", HttpStatus.INTERNAL_SERVER_ERROR));
-    ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
-    assertThat(resultResp.getResult()).isEqualTo("Cannot retrieve SchemaRegistry Url");
-  }
+    @Test
+    public void postSchema2() {
+        ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
+        when(getAdminClient.getRequestDetails(any(), any(), any()))
+                .thenReturn(Pair.of("", restTemplate));
+        when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
+                .thenReturn(
+                        new ResponseEntity<>(
+                                "Cannot retrieve SchemaRegistry Url", HttpStatus.INTERNAL_SERVER_ERROR));
+        ApiResponse resultResp = schemaService.registerSchema(clusterSchemaRequest);
+        assertThat(resultResp.getResult()).isEqualTo("Cannot retrieve SchemaRegistry Url");
+    }
 
-  private Map<String, TopicDescription> getTopicDescs() {
-    Node node = new Node(1, "localhost", 1);
+    private Map<String, TopicDescription> getTopicDescs() {
+        Node node = new Node(1, "localhost", 1);
 
-    TopicPartitionInfo topicPartitionInfo =
-        new TopicPartitionInfo(2, node, List.of(node), List.of(node));
-    TopicDescription tDesc =
-        new TopicDescription(
-            "testtopic", true, Arrays.asList(topicPartitionInfo, topicPartitionInfo));
-    Map<String, TopicDescription> mapResults = new HashMap<>();
-    mapResults.put("testtopic1", tDesc);
+        TopicPartitionInfo topicPartitionInfo =
+                new TopicPartitionInfo(2, node, List.of(node), List.of(node));
+        TopicDescription tDesc =
+                new TopicDescription(
+                        "testtopic", true, Arrays.asList(topicPartitionInfo, topicPartitionInfo));
+        Map<String, TopicDescription> mapResults = new HashMap<>();
+        mapResults.put("testtopic1", tDesc);
 
-    tDesc =
-        new TopicDescription(
-            "testtopic2", true, Arrays.asList(topicPartitionInfo, topicPartitionInfo));
-    mapResults.put("testtopic2", tDesc);
+        tDesc =
+                new TopicDescription(
+                        "testtopic2", true, Arrays.asList(topicPartitionInfo, topicPartitionInfo));
+        mapResults.put("testtopic2", tDesc);
 
-    return mapResults;
-  }
+        return mapResults;
+    }
 }
