@@ -18,6 +18,7 @@ import io.aiven.klaw.clusterapi.utils.ClusterApiUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,10 +38,10 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.acl.AccessControlEntry;
 import org.apache.kafka.common.acl.AclBinding;
+import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.acl.AclPermissionType;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -132,15 +133,14 @@ public class UtilComponentsServiceTest {
   }
 
   @Test
-  @Disabled
   public void loadAcls1() throws Exception {
     List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
-    when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
+    when(adminClient.describeAcls(any(AclBindingFilter.class))).thenReturn(describeAclsResult);
     when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
-    when(kafkaFutureCollection.get()).thenReturn(listAclBindings);
+    when(kafkaFutureCollection.get(anyLong(), any(TimeUnit.class))).thenReturn(listAclBindings);
     when(accessControlEntry.host()).thenReturn("11.12.33.456");
     when(accessControlEntry.operation()).thenReturn(AclOperation.READ);
     when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
@@ -151,15 +151,14 @@ public class UtilComponentsServiceTest {
   }
 
   @Test
-  @Disabled
   public void loadAcls2() throws Exception {
     List<AclBinding> listAclBindings = utilMethods.getListAclBindings(accessControlEntry);
 
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
-    when(adminClient.describeAcls(any())).thenReturn(describeAclsResult);
+    when(adminClient.describeAcls(any(AclBindingFilter.class))).thenReturn(describeAclsResult);
     when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
-    when(kafkaFutureCollection.get()).thenReturn(listAclBindings);
+    when(kafkaFutureCollection.get(anyLong(), any(TimeUnit.class))).thenReturn(listAclBindings);
     when(accessControlEntry.host()).thenReturn("11.12.33.456");
     when(accessControlEntry.operation()).thenReturn(AclOperation.CREATE);
     when(accessControlEntry.permissionType()).thenReturn(AclPermissionType.ALLOW);
@@ -191,7 +190,7 @@ public class UtilComponentsServiceTest {
     when(kafkaFuture.get()).thenReturn(list);
 
     // Mockito seems to have trouble with stubbing default methods.
-    when(adminClient.describeTopics((Collection<String>) any())).thenReturn(describeTopicsResult);
+    when(adminClient.describeTopics(anyCollection())).thenReturn(describeTopicsResult);
     when(describeTopicsResult.all()).thenReturn(kafkaFutureTopicdesc);
     when(kafkaFutureTopicdesc.get(anyLong(), any(TimeUnit.class))).thenReturn(getTopicDescs());
 
@@ -214,7 +213,6 @@ public class UtilComponentsServiceTest {
   }
 
   @Test
-  @Disabled
   public void createTopicSuccess() throws Exception {
     ClusterTopicRequest clusterTopicRequest =
         ClusterTopicRequest.builder()
@@ -226,7 +224,7 @@ public class UtilComponentsServiceTest {
             .clusterName("")
             .build();
 
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), ""))
+    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createTopics(any())).thenReturn(createTopicsResult);
     when(createTopicsResult.values()).thenReturn(futureTocpiCreateResult);
@@ -296,49 +294,64 @@ public class UtilComponentsServiceTest {
   }
 
   @Test
-  @Disabled
   public void createProducerAcl1() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
-    when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
+    when(getAdminClient.getAdminClient(
+            anyString(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
-
+    when(createAclsResult.all()).thenReturn(kFutureVoid);
+    when(adminClient.describeAcls(any(AclBindingFilter.class))).thenReturn(describeAclsResult);
+    when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
+    when(kafkaFutureCollection.get(anyLong(), any(TimeUnit.class)))
+        .thenReturn(Collections.emptyList());
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
 
     assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
-  @Disabled
   public void createProducerAcl2() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
+    when(createAclsResult.all()).thenReturn(kFutureVoid);
+    when(adminClient.describeAcls(any(AclBindingFilter.class))).thenReturn(describeAclsResult);
+    when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
+    when(kafkaFutureCollection.get(anyLong(), any(TimeUnit.class)))
+        .thenReturn(Collections.emptyList());
 
     String result = apacheKafkaAclService.updateProducerAcl(clusterAclRequest);
     assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
-  @Disabled
   public void createConsumerAcl1() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
-
+    when(createAclsResult.all()).thenReturn(kFutureVoid);
+    when(adminClient.describeAcls(any(AclBindingFilter.class))).thenReturn(describeAclsResult);
+    when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
+    when(kafkaFutureCollection.get(anyLong(), any(TimeUnit.class)))
+        .thenReturn(Collections.emptyList());
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
     assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);
   }
 
   @Test
-  @Disabled
   public void createConsumerAcl2() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     when(getAdminClient.getAdminClient(any(), eq(KafkaSupportedProtocol.PLAINTEXT), anyString()))
         .thenReturn(adminClient);
     when(adminClient.createAcls(any())).thenReturn(createAclsResult);
+    when(createAclsResult.all()).thenReturn(kFutureVoid);
+    when(adminClient.describeAcls(any(AclBindingFilter.class))).thenReturn(describeAclsResult);
+    when(describeAclsResult.values()).thenReturn(kafkaFutureCollection);
+    when(kafkaFutureCollection.get(anyLong(), any(TimeUnit.class)))
+        .thenReturn(Collections.emptyList());
 
     String result = apacheKafkaAclService.updateConsumerAcl(clusterAclRequest);
     assertThat(result).isEqualTo(ApiResultStatus.SUCCESS.value);

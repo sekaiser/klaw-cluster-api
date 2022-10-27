@@ -122,6 +122,7 @@ public class UtilMethods {
         .topicName("testtopic")
         .protocol(KafkaSupportedProtocol.PLAINTEXT)
         .consumerGroup("congroup1")
+        .clusterName("clusterName")
         .aclType(aclType)
         .aclIp("11.12.33.122")
         .aclSsl(null)
