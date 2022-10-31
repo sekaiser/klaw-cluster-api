@@ -20,6 +20,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -47,6 +48,7 @@ public class ClusterApiUtils {
 
   private final AdminClientProperties adminClientProperties;
 
+  @Autowired
   public ClusterApiUtils(Environment env, AdminClientProperties adminClientProperties) {
     this(env, adminClientProperties, new HashMap<>());
   }

@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.klaw.clusterapi.UtilMethods;
+import io.aiven.klaw.clusterapi.config.JwtRequestFilter;
 import io.aiven.klaw.clusterapi.models.AclType;
 import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ApiResponse;
@@ -46,6 +47,7 @@ public class ClusterApiControllerTest {
   @MockBean private SchemaService schemaService;
   @MockBean private MonitoringService monitoringService;
   @MockBean private AivenApiService aivenApiService;
+  @MockBean private JwtRequestFilter jwtRequestFilter;
 
   @Autowired private MockMvc mvc;
 

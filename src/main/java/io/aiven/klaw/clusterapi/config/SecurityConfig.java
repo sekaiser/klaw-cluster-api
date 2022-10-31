@@ -1,60 +1,60 @@
 package io.aiven.klaw.clusterapi.config;
 
-import org.jasypt.util.text.BasicTextEncryptor;
+import io.aiven.klaw.clusterapi.services.JwtTokenUtilService;
+import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
-@PropertySource(value = {"classpath:application.properties"})
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+@Slf4j
+public class SecurityConfig {
+  @Value("${klaw.clusterapi.access.username:kwuser}")
+  private String clusterApiUser;
 
-  @Value("${klaw.clusterapi.access.username}")
-  String user1_username;
+  @Lazy @Autowired private UserDetailsService userDetailsService;
 
-  @Value("${klaw.clusterapi.access.password}")
-  String user1_pwd;
+  private final JwtTokenUtilService jwtTokenUtilService;
 
-  @Value("${klaw.jasypt.encryptor.secretkey}")
-  String encryptorSecretKey;
-
-  @Autowired
-  public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-
-    PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-
-    auth.inMemoryAuthentication()
-        .passwordEncoder(encoder)
-        .withUser(user1_username)
-        .password(encoder.encode(decodePwd(user1_pwd)))
-        .roles("USER");
+  public SecurityConfig(JwtTokenUtilService jwtTokenUtilService) {
+    this.jwtTokenUtilService = jwtTokenUtilService;
   }
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.csrf()
-        .disable() // .authorizeRequests().anyRequest().permitAll()
-        //                .and()
-        .authorizeRequests()
-        .anyRequest()
-        .fullyAuthenticated()
-        .and()
-        .httpBasic();
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.csrf().disable();
+    http.formLogin().disable();
+    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    http.authorizeRequests().anyRequest().fullyAuthenticated();
+    http.addFilterBefore(
+        new JwtRequestFilter(userDetailsService, jwtTokenUtilService),
+        UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
   }
 
-  private String decodePwd(String pwd) {
-    if (pwd != null) {
-      BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
-      textEncryptor.setPasswordCharArray(encryptorSecretKey.toCharArray());
-
-      return textEncryptor.decrypt(pwd);
+  @Bean
+  @Primary
+  public UserDetailsService getUserDetailsService() throws Exception {
+    final Properties globalUsers = new Properties();
+    log.info("Loading user !!");
+    try {
+      globalUsers.put(clusterApiUser, ",ADMIN,enabled");
+    } catch (Exception e) {
+      log.error("Error : User not loaded {}.", clusterApiUser, e);
+      throw new Exception("Error : Cluster Api User not loaded. Exiting.");
     }
-    return "";
+
+    return new InMemoryUserDetailsManager(globalUsers);
   }
 }

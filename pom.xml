@@ -47,21 +47,20 @@
         <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+        <!-- the list is sorted-->
+        <apachehttp.version>4.5.13</apachehttp.version>
+        <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
+        <guava.version>31.1-jre</guava.version>
+        <google-java-format.version>1.15.0</google-java-format.version>
+        <jasyptencrypt.version>3.0.4</jasyptencrypt.version>
+        <jjwt.version>0.11.5</jjwt.version>
         <kafka.client.version>3.3.1</kafka.client.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
-        <jasyptencrypt.version>3.0.4</jasyptencrypt.version>
-        <apachehttp.version>4.5.13</apachehttp.version>
-        <apache.commons.lang.version>3.12.0</apache.commons.lang.version>
-        <google-java-format.version>1.15.0</google-java-format.version>
-        <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
         <powermock-module-junit4.version>2.0.9</powermock-module-junit4.version>
-        <spring-kafka-test.version>2.9.2</spring-kafka-test.version>
+        <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
         <powermock-api-mockito2.version>2.0.9</powermock-api-mockito2.version>
-        <guava.version>31.1-jre</guava.version>
-        <swagger-annotations.version>2.2.4</swagger-annotations.version>
-        <springfox-swagger-ui.version>3.0.0</springfox-swagger-ui.version>
-        <springfox-swagger2.version>3.0.0</springfox-swagger2.version>
+        <spring-kafka-test.version>2.9.2</spring-kafka-test.version>
         <assertj-core.version>3.23.1</assertj-core.version>
     </properties>
 
@@ -100,22 +99,6 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--Swagger-->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>${springfox-swagger2.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>${springfox-swagger-ui.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>${swagger-annotations.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
@@ -140,6 +123,23 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${apachehttp.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
