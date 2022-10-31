@@ -57,10 +57,9 @@
         <kafka.client.version>3.3.1</kafka.client.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
-        <powermock-module-junit4.version>2.0.9</powermock-module-junit4.version>
         <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
-        <powermock-api-mockito2.version>2.0.9</powermock-api-mockito2.version>
         <spring-kafka-test.version>2.9.2</spring-kafka-test.version>
+        <assertj-core.version>3.23.1</assertj-core.version>
     </properties>
 
     <dependencies>
@@ -142,24 +141,17 @@
         </dependency>
 
         <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito2</artifactId>
-            <version>${powermock-api-mockito2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
             <version>${spring-kafka-test.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermock-module-junit4.version}</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>

@@ -1,9 +1,9 @@
 package io.aiven.klaw.clusterapi.utils;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
 import java.util.HashMap;
@@ -13,19 +13,16 @@ import java.util.Set;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.common.KafkaFuture;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
-import org.springframework.test.util.ReflectionTestUtils;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(AdminClient.class)
+@ExtendWith(MockitoExtension.class)
 public class GetAdminClientTest {
 
   public static final String LOCALHOST_9092 = "localhost:9092";
@@ -34,88 +31,82 @@ public class GetAdminClientTest {
   @Mock Environment env;
 
   @Mock AdminClient adminClient;
-
-  @Mock private ListTopicsResult listTopicsResult;
-
-  @Mock private KafkaFuture<Set<String>> kafkaFuture;
-
-  @Mock private HashMap<String, AdminClient> adminClientsMap;
-
   ClusterApiUtils getAdminClient;
+  @Mock private ListTopicsResult listTopicsResult;
+  @Mock private KafkaFuture<Set<String>> kafkaFuture;
+  @Mock private HashMap<String, AdminClient> adminClientsMap;
+  @Mock private AdminClientProperties adminClientProperties;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    getAdminClient = new ClusterApiUtils(env);
-    ReflectionTestUtils.setField(getAdminClient, "adminClientsMap", adminClientsMap);
-    ReflectionTestUtils.setField(getAdminClient, "env", env);
+    getAdminClient = new ClusterApiUtils(env, adminClientProperties, adminClientsMap);
+    when(adminClientProperties.getRetriesConfig()).thenReturn("3");
+    when(adminClientProperties.getRequestTimeOutMs()).thenReturn("15000");
+    when(adminClientProperties.getRetryBackOffMsConfig()).thenReturn("15000");
   }
 
   @Test
-  @Ignore
   public void getAdminClient1() throws Exception {
-    mockStatic(AdminClient.class);
+    try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
+      mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
+      // Commented out to avoid UnnecessaryStubbingException
+      // when(env.getProperty(any())).thenReturn("null");
+      when(adminClient.listTopics()).thenReturn(listTopicsResult);
+      when(listTopicsResult.names()).thenReturn(kafkaFuture);
+      Set<String> setStr = new HashSet<>();
+      when(kafkaFuture.get()).thenReturn(setStr);
 
-    when(env.getProperty(any())).thenReturn("null");
-    when(adminClient.listTopics()).thenReturn(listTopicsResult);
-    when(listTopicsResult.names()).thenReturn(kafkaFuture);
-    Set<String> setStr = new HashSet<>();
-    when(kafkaFuture.get()).thenReturn(setStr);
-    when(adminClientsMap.containsKey(LOCALHOST_9092)).thenReturn(false);
-    BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
-
-    AdminClient result =
-        getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
-    assertNotNull(result);
+      AdminClient result =
+          getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
+      assertThat(result).isNotNull();
+    }
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void getAdminClient2() throws Exception {
-    mockStatic(AdminClient.class);
+    try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
+      mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
+      // Commented out to avoid UnnecessaryStubbingException
+      // when(env.getProperty(any())).thenReturn("true");
+      when(adminClient.listTopics()).thenReturn(listTopicsResult);
+      when(listTopicsResult.names()).thenReturn(kafkaFuture);
+      Set<String> setStr = new HashSet<>();
+      when(kafkaFuture.get()).thenReturn(setStr);
 
-    when(env.getProperty(any())).thenReturn("true");
-    when(adminClient.listTopics()).thenReturn(listTopicsResult);
-    when(listTopicsResult.names()).thenReturn(kafkaFuture);
-    Set<String> setStr = new HashSet<>();
-    when(kafkaFuture.get()).thenReturn(setStr);
-    BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
-
-    AdminClient result =
-        getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
-    assertNotNull(result);
+      AdminClient result =
+          getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
+      assertThat(result).isNotNull();
+    }
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void getAdminClient3() throws Exception {
-    mockStatic(AdminClient.class);
+    try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
+      mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
+      // Commented out to avoid UnnecessaryStubbingException
+      when(env.getProperty(any())).thenReturn("false");
+      when(adminClient.listTopics()).thenReturn(listTopicsResult);
+      when(listTopicsResult.names()).thenReturn(kafkaFuture);
+      Set<String> setStr = new HashSet<>();
+      when(kafkaFuture.get()).thenReturn(setStr);
 
-    when(env.getProperty(any())).thenReturn("false");
-    BDDMockito.given(AdminClient.create(any(Properties.class))).willReturn(adminClient);
-    when(adminClient.listTopics()).thenReturn(listTopicsResult);
-    when(listTopicsResult.names()).thenReturn(kafkaFuture);
-    Set<String> setStr = new HashSet<>();
-    when(kafkaFuture.get()).thenReturn(setStr);
-
-    AdminClient result =
-        getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
-    assertNotNull(result);
+      AdminClient result =
+          getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
+      assertThat(result).isNotNull();
+    }
   }
 
   @Test
-  @Ignore
   public void getPlainProperties() {
-    when(env.getProperty(any())).thenReturn("somevalue");
     Properties props = getAdminClient.getPlainProperties(LOCALHOST);
-    assertEquals(LOCALHOST, props.getProperty("bootstrap.servers"));
+    assertThat(props.getProperty("bootstrap.servers")).isEqualTo(LOCALHOST);
   }
 
   @Test
-  @Ignore
   public void getSslProperties() {
-    when(env.getProperty(any())).thenReturn("somevalue");
-
     Properties props = getAdminClient.getSslProperties(LOCALHOST_9093, "");
-    assertEquals(LOCALHOST_9093, props.getProperty("bootstrap.servers"));
+    assertThat(props.getProperty("bootstrap.servers")).isEqualTo(LOCALHOST_9093);
   }
 }

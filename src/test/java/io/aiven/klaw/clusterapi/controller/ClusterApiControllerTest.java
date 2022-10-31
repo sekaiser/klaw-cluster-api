@@ -1,13 +1,18 @@
 package io.aiven.klaw.clusterapi.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.klaw.clusterapi.UtilMethods;
+import io.aiven.klaw.clusterapi.config.JwtRequestFilter;
 import io.aiven.klaw.clusterapi.models.AclType;
+import io.aiven.klaw.clusterapi.models.AclsNativeType;
 import io.aiven.klaw.clusterapi.models.ApiResponse;
 import io.aiven.klaw.clusterapi.models.ApiResultStatus;
 import io.aiven.klaw.clusterapi.models.ClusterAclRequest;
@@ -15,254 +20,228 @@ import io.aiven.klaw.clusterapi.models.ClusterSchemaRequest;
 import io.aiven.klaw.clusterapi.models.ClusterStatus;
 import io.aiven.klaw.clusterapi.models.ClusterTopicRequest;
 import io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol;
+import io.aiven.klaw.clusterapi.services.AivenApiService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaAclService;
 import io.aiven.klaw.clusterapi.services.ApacheKafkaTopicService;
+import io.aiven.klaw.clusterapi.services.MonitoringService;
 import io.aiven.klaw.clusterapi.services.SchemaService;
 import io.aiven.klaw.clusterapi.services.UtilComponentsService;
-import java.util.Set;
-import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import java.nio.charset.StandardCharsets;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@WebMvcTest(controllers = ClusterApiController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class ClusterApiControllerTest {
 
   @MockBean private UtilComponentsService utilComponentsService;
-
   @MockBean private ApacheKafkaAclService apacheKafkaAclService;
   @MockBean private ApacheKafkaTopicService apacheKafkaTopicService;
   @MockBean private SchemaService schemaService;
+  @MockBean private MonitoringService monitoringService;
+  @MockBean private AivenApiService aivenApiService;
+  @MockBean private JwtRequestFilter jwtRequestFilter;
 
-  private MockMvc mvc;
-
-  private ClusterApiController clusterApiController;
+  @Autowired private MockMvc mvc;
 
   private UtilMethods utilMethods;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    clusterApiController = new ClusterApiController();
-    mvc = MockMvcBuilders.standaloneSetup(clusterApiController).dispatchOptions(true).build();
     utilMethods = new UtilMethods();
-    ReflectionTestUtils.setField(
-        clusterApiController, "manageKafkaComponents", utilComponentsService);
   }
 
   @Test
   public void getApiStatus() throws Exception {
-    String res =
-        mvc.perform(
-                MockMvcRequestBuilders.get("/topics/getApiStatus")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    assertEquals("ONLINE", res);
+    mvc.perform(get("/topics/getApiStatus"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json("\"ONLINE\""));
   }
 
   @Test
-  @Ignore
   public void getStatus() throws Exception {
-    String env = "DEV";
-    when(utilComponentsService.getStatus(env, KafkaSupportedProtocol.PLAINTEXT, "", ""))
+    String clusterName = "testCluster";
+    String clusterType = "sampleType";
+    String bootstrapServers = "localhost:9092";
+
+    when(utilComponentsService.getStatus(
+            bootstrapServers, KafkaSupportedProtocol.PLAINTEXT, clusterName, clusterType))
         .thenReturn(ClusterStatus.ONLINE);
 
-    String res =
-        mvc.perform(
-                MockMvcRequestBuilders.get("/topics/getStatus/" + env + "/PLAINTEXT")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    assertEquals("ONLINE", res);
+    String urlTemplate =
+        String.join(
+            "/",
+            "/topics",
+            "getStatus",
+            bootstrapServers,
+            KafkaSupportedProtocol.PLAINTEXT.getValue(),
+            clusterName,
+            clusterType);
+    mvc.perform(
+            MockMvcRequestBuilders.get(urlTemplate)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json("\"ONLINE\""));
   }
 
   @Test
-  @Ignore
   public void getTopics() throws Exception {
-    String env = "DEV";
-    when(apacheKafkaTopicService.loadTopics(env, KafkaSupportedProtocol.PLAINTEXT, ""))
+    String clusterName = "testCluster";
+    String bootstrapServers = "localhost:9092";
+
+    when(apacheKafkaTopicService.loadTopics(
+            bootstrapServers, KafkaSupportedProtocol.PLAINTEXT, clusterName))
         .thenReturn(utilMethods.getTopics());
 
-    String res =
-        mvc.perform(
-                MockMvcRequestBuilders.get("/topics/getTopics/" + env + "/PLAINTEXT")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    Set response = new ObjectMapper().readValue(res, Set.class);
-    assertEquals(1, response.size());
+    String urlTemplate =
+        String.join(
+            "/",
+            "/topics",
+            "getTopics",
+            bootstrapServers,
+            KafkaSupportedProtocol.PLAINTEXT.getValue(),
+            clusterName);
+    mvc.perform(get(urlTemplate))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$", hasSize(1)));
   }
 
   @Test
-  @Ignore
   public void getAcls() throws Exception {
-    String env = "DEV";
-    when(apacheKafkaAclService.loadAcls(env, KafkaSupportedProtocol.PLAINTEXT, ""))
+    String clusterName = "testCluster";
+    String bootstrapServers = "localhost:9092";
+    String aclsNativeType = AclsNativeType.NATIVE.name();
+    String projectName = "projectName";
+    String serviceName = "serviceName";
+
+    when(apacheKafkaAclService.loadAcls(
+            bootstrapServers, KafkaSupportedProtocol.PLAINTEXT, clusterName))
         .thenReturn(utilMethods.getAcls());
 
-    String res =
-        mvc.perform(
-                MockMvcRequestBuilders.get("/topics/getAcls/" + env + "/PLAINTEXT")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    Set response = new ObjectMapper().readValue(res, Set.class);
-    assertEquals(2, response.size());
+    String urlTemplate =
+        String.join(
+            "/",
+            "/topics",
+            "getAcls",
+            bootstrapServers,
+            aclsNativeType,
+            KafkaSupportedProtocol.PLAINTEXT.getValue(),
+            clusterName,
+            projectName,
+            serviceName);
+    mvc.perform(get(urlTemplate))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$", hasSize(2)));
   }
 
   @Test
-  @Ignore
   public void createTopics() throws Exception {
-    ClusterTopicRequest topicRequest = utilMethods.getTopicRequest();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(topicRequest);
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(utilMethods.getTopicRequest());
     ApiResponse apiResponse = ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
 
-    when(apacheKafkaTopicService.createTopic(topicRequest)).thenReturn(apiResponse);
+    when(apacheKafkaTopicService.createTopic(any(ClusterTopicRequest.class)))
+        .thenReturn(apiResponse);
 
-    String response =
-        mvc.perform(
-                MockMvcRequestBuilders.post("/topics/createTopics")
-                    .content(jsonReq)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    // assertEquals(ApiResultStatus.SUCCESS.value, response);
-    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
+    mvc.perform(
+            post("/topics/createTopics")
+                .content(jsonReq)
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding(StandardCharsets.UTF_8))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
   }
 
   @Test
-  @Ignore
   public void createAclsProducer() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.PRODUCER.value);
     String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
 
-    when(apacheKafkaAclService.updateProducerAcl(clusterAclRequest))
+    when(apacheKafkaAclService.updateProducerAcl(any(ClusterAclRequest.class)))
         .thenReturn(ApiResultStatus.SUCCESS.value);
 
-    String response =
-        mvc.perform(
-                MockMvcRequestBuilders.post("/topics/createAcls")
-                    .content(jsonReq)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    // assertEquals(ApiResultStatus.SUCCESS.value, response);
-    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
+    mvc.perform(
+            post("/topics/createAcls")
+                .content(jsonReq)
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding(StandardCharsets.UTF_8))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
   }
 
   @Test
-  @Ignore
   public void createAclsConsumer() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
 
-    when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest)).thenReturn("success1");
+    when(apacheKafkaAclService.updateConsumerAcl(any(ClusterAclRequest.class)))
+        .thenReturn("success1");
 
-    String response =
-        mvc.perform(
-                MockMvcRequestBuilders.post("/topics/createAcls")
-                    .content(jsonReq)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
+    mvc.perform(
+            post("/topics/createAcls")
+                .content(jsonReq)
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding(StandardCharsets.UTF_8))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
   }
 
   @Test
-  @Ignore
   public void createAclsConsumerFail() throws Exception {
     ClusterAclRequest clusterAclRequest = utilMethods.getAclRequest(AclType.CONSUMER.value);
     String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterAclRequest);
 
-    when(apacheKafkaAclService.updateConsumerAcl(clusterAclRequest))
+    when(apacheKafkaAclService.updateConsumerAcl(any(ClusterAclRequest.class)))
         .thenThrow(new RuntimeException("Error creating acls"));
 
-    String response =
-        mvc.perform(
-                MockMvcRequestBuilders.post("/topics/createAcls")
-                    .content(jsonReq)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
+    mvc.perform(post("/topics/createAcls").content(jsonReq).contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().is5xxServerError())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.result", containsString("Error creating acls")));
   }
 
   @Test
   public void postSchema() throws Exception {
-    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterSchemaRequest);
-
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(utilMethods.getSchema());
     ApiResponse apiResponse = ApiResponse.builder().result(ApiResultStatus.SUCCESS.value).build();
+    when(schemaService.registerSchema(any(ClusterSchemaRequest.class))).thenReturn(apiResponse);
 
-    when(schemaService.registerSchema(clusterSchemaRequest)).thenReturn(apiResponse);
-
-    String response =
-        mvc.perform(
-                MockMvcRequestBuilders.post("/topics/postSchema")
-                    .content(jsonReq)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
+    mvc.perform(
+            post("/topics/postSchema")
+                .content(jsonReq)
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding(StandardCharsets.UTF_8))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().string(containsString(ApiResultStatus.SUCCESS.value)));
   }
 
   @Test
   public void postSchemaFail() throws Exception {
-    ClusterSchemaRequest clusterSchemaRequest = utilMethods.getSchema();
-    String jsonReq = new ObjectMapper().writer().writeValueAsString(clusterSchemaRequest);
+    String jsonReq = new ObjectMapper().writer().writeValueAsString(utilMethods.getSchema());
 
-    when(schemaService.registerSchema(clusterSchemaRequest))
+    when(schemaService.registerSchema(any(ClusterSchemaRequest.class)))
         .thenThrow(new RuntimeException("Error registering schema"));
 
-    String response =
-        mvc.perform(
-                MockMvcRequestBuilders.post("/topics/postSchema")
-                    .content(jsonReq)
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-
-    assertThat(response, CoreMatchers.containsString(ApiResultStatus.SUCCESS.value));
+    mvc.perform(
+            post("/topics/postSchema")
+                .content(jsonReq)
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding(StandardCharsets.UTF_8))
+        .andExpect(status().is5xxServerError());
   }
 }

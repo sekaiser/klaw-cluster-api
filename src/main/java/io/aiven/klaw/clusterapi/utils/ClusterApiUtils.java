@@ -1,6 +1,7 @@
 package io.aiven.klaw.clusterapi.utils;
 
-import static io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol.*;
+import static io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol.PLAINTEXT;
+import static io.aiven.klaw.clusterapi.models.KafkaSupportedProtocol.SSL;
 
 import com.google.common.base.Strings;
 import io.aiven.klaw.clusterapi.config.SslContextConfig;
@@ -10,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,7 +20,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -31,27 +33,6 @@ public class ClusterApiUtils {
   public static final String HTTP_PREFIX = "http://";
   public static final String SHA_256 = "SHA_256";
   public static final String SHA_512 = "SHA_512";
-
-  final Environment env;
-
-  @Value("${klaw.request.timeout.ms:15000}")
-  private String requestTimeOutMs;
-
-  @Value("${klaw.retries.config:25}")
-  private String retriesConfig;
-
-  @Value("${klaw.retry.backoff.ms:15000}")
-  private String retryBackOffMsConfig;
-
-  @Value("${klaw.aiven.kafkaconnect.credentials:credentials}")
-  private String connectCredentials;
-
-  @Value("${klaw.aiven.karapace.credentials}")
-  private String schemaRegistryCredentials;
-
-  private final HashMap<String, AdminClient> adminClientsMap = new HashMap<>();
-  ;
-
   private static MessageDigest messageDigest;
 
   static {
@@ -62,8 +43,23 @@ public class ClusterApiUtils {
     }
   }
 
-  public ClusterApiUtils(Environment env) {
+  private final Environment env;
+  private final Map<String, AdminClient> adminClientsMap;
+
+  private final AdminClientProperties adminClientProperties;
+
+  @Autowired
+  public ClusterApiUtils(Environment env, AdminClientProperties adminClientProperties) {
+    this(env, adminClientProperties, new HashMap<>());
+  }
+
+  ClusterApiUtils(
+      Environment env,
+      AdminClientProperties adminClientProperties,
+      Map<String, AdminClient> adminClientsMap) {
     this.env = env;
+    this.adminClientsMap = adminClientsMap;
+    this.adminClientProperties = adminClientProperties;
   }
 
   public RestTemplate getRestTemplate() {
@@ -396,10 +392,12 @@ public class ClusterApiUtils {
     return props;
   }
 
-  private void setOtherConfig(Properties props) {
-    props.put(AdminClientConfig.RETRIES_CONFIG, retriesConfig);
-    props.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeOutMs);
-    props.put(AdminClientConfig.RETRY_BACKOFF_MS_CONFIG, retryBackOffMsConfig);
+  void setOtherConfig(Properties props) {
+    props.put(AdminClientConfig.RETRIES_CONFIG, adminClientProperties.getRetriesConfig());
+    props.put(
+        AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, adminClientProperties.getRequestTimeOutMs());
+    props.put(
+        AdminClientConfig.RETRY_BACKOFF_MS_CONFIG, adminClientProperties.getRetryBackOffMsConfig());
   }
 
   public Pair<String, RestTemplate> getRequestDetails(
@@ -412,9 +410,11 @@ public class ClusterApiUtils {
       restTemplate = new RestTemplate();
     } else if (SSL == protocol) {
       if (KafkaClustersType.KAFKA_CONNECT.equals(kafkaClustersType)) {
-        connectorsUrl = HTTPS_PREFIX + connectCredentials + "@" + suffixUrl;
+        connectorsUrl =
+            HTTPS_PREFIX + adminClientProperties.getConnectCredentials() + "@" + suffixUrl;
       } else if (KafkaClustersType.SCHEMA_REGISTRY.equals(kafkaClustersType)) {
-        connectorsUrl = HTTPS_PREFIX + schemaRegistryCredentials + "@" + suffixUrl;
+        connectorsUrl =
+            HTTPS_PREFIX + adminClientProperties.getSchemaRegistryCredentials() + "@" + suffixUrl;
       }
       restTemplate = new RestTemplate(SslContextConfig.requestFactory);
     } else {

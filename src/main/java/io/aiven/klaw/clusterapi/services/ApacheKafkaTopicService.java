@@ -26,7 +26,6 @@ import org.apache.kafka.clients.admin.NewPartitions;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.KafkaException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -36,14 +35,13 @@ public class ApacheKafkaTopicService {
 
   private static final long TIME_OUT_SECS_FOR_TOPICS = 5;
 
-  Environment env;
+  private Environment env;
 
-  @Autowired ClusterApiUtils clusterApiUtils;
+  private ClusterApiUtils clusterApiUtils;
 
-  public ApacheKafkaTopicService() {}
-
-  public ApacheKafkaTopicService(Environment env) {
+  public ApacheKafkaTopicService(Environment env, ClusterApiUtils clusterApiUtils) {
     this.env = env;
+    this.clusterApiUtils = clusterApiUtils;
   }
 
   public synchronized Set<HashMap<String, String>> loadTopics(
