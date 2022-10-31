@@ -14,6 +14,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.common.KafkaFuture;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -48,6 +49,44 @@ public class GetAdminClientTest {
   public void getAdminClient1() throws Exception {
     try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
       mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
+      // Commented out to avoid UnnecessaryStubbingException
+      // when(env.getProperty(any())).thenReturn("null");
+      when(adminClient.listTopics()).thenReturn(listTopicsResult);
+      when(listTopicsResult.names()).thenReturn(kafkaFuture);
+      Set<String> setStr = new HashSet<>();
+      when(kafkaFuture.get()).thenReturn(setStr);
+
+      AdminClient result =
+          getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
+      assertThat(result).isNotNull();
+    }
+  }
+
+  @Test
+  @Disabled
+  public void getAdminClient2() throws Exception {
+    try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
+      mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
+      // Commented out to avoid UnnecessaryStubbingException
+      // when(env.getProperty(any())).thenReturn("true");
+      when(adminClient.listTopics()).thenReturn(listTopicsResult);
+      when(listTopicsResult.names()).thenReturn(kafkaFuture);
+      Set<String> setStr = new HashSet<>();
+      when(kafkaFuture.get()).thenReturn(setStr);
+
+      AdminClient result =
+          getAdminClient.getAdminClient(LOCALHOST_9092, KafkaSupportedProtocol.PLAINTEXT, "");
+      assertThat(result).isNotNull();
+    }
+  }
+
+  @Test
+  @Disabled
+  public void getAdminClient3() throws Exception {
+    try (MockedStatic<AdminClient> mocked = mockStatic(AdminClient.class)) {
+      mocked.when(() -> AdminClient.create(any(Properties.class))).thenReturn(adminClient);
+      // Commented out to avoid UnnecessaryStubbingException
+      when(env.getProperty(any())).thenReturn("false");
       when(adminClient.listTopics()).thenReturn(listTopicsResult);
       when(listTopicsResult.names()).thenReturn(kafkaFuture);
       Set<String> setStr = new HashSet<>();
