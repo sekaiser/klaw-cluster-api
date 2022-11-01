@@ -1,9 +1,9 @@
 package io.aiven.klaw.clusterapi.config;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -76,7 +76,7 @@ public class SslContextConfig {
     File key = ResourceUtils.getFile(storeLoc);
 
     final KeyStore store = KeyStore.getInstance(keyStoreType);
-    try (InputStream inputStream = new FileInputStream(key)) {
+    try (InputStream inputStream = Files.newInputStream(key.toPath())) {
       store.load(inputStream, secret.toCharArray());
     }
     return store;
