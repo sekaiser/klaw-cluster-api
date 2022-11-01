@@ -40,7 +40,7 @@ public class KafkaConnectService {
     try {
       reqDetails.getRight().delete(reqDetails.getLeft(), String.class);
     } catch (RestClientException e) {
-      log.error("Error in deleting connector " + e.toString());
+      log.error("Error in deleting connector", e);
       result.put("result", ApiResultStatus.ERROR.value);
       result.put("errorText", e.toString().replaceAll("\"", ""));
       return result;
@@ -71,7 +71,7 @@ public class KafkaConnectService {
     try {
       reqDetails.getRight().put(reqDetails.getLeft(), request, String.class);
     } catch (RestClientException e) {
-      log.error("Error in updating connector " + e.toString());
+      log.error("Error in updating connector", e);
       result.put("result", ApiResultStatus.ERROR.value);
       result.put("errorText", e.toString().replaceAll("\"", ""));
       return result;
@@ -100,7 +100,7 @@ public class KafkaConnectService {
       responseNew =
           reqDetails.getRight().postForEntity(reqDetails.getLeft(), request, String.class);
     } catch (RestClientException e) {
-      log.error("Error in registering new connector " + e.toString());
+      log.error("Error in registering new connector", e);
       throw new Exception(e.toString());
     }
     if (responseNew.getStatusCodeValue() == 201) {
